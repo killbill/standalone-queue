@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "org.killbill.billing.queue.rpc.gen";
+
+option go_package = "github.com/killbill/standalone-queue;queue";
+
+package queue;
+
+import "google/protobuf/timestamp.proto";
+
+
+service QueueApi {
+  rpc PostEvent (EventMsg) returns (PostEventResponse);
+  rpc SubscribeEvents (SubscriptionRequest) returns (stream EventMsg);
+}
+
+
+message EventMsg {
+    string queue_name = 1;
+	string creating_owner = 2;
+    string event_json = 3;
+    string user_token = 4;
+    string future_user_token = 5;
+	google.protobuf.Timestamp effective_date = 6;
+    int64 search_key1 = 7;
+    int64 search_key2 = 8;
+}
+
+message PostEventResponse {
+}
+
+message SubscriptionRequest {
+    int64 search_key2 = 1;
+}
+
+message SubscriptionResponse {
+}
+
+

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.kill-bill.billing</groupId>
+        <artifactId>killbill-oss-parent</artifactId>
+        <version>0.144.29</version>
+    </parent>
+    <groupId>org.kill-bill.billing.rpc</groupId>
+    <artifactId>queue</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>jar</packaging>
+    <name>queue gRPC apis</name>
+    <description>queue gRPC apis</description>
+    <url>http://github.com/killbill/standalone-queue</url>
+    <scm>
+        <connection>scm:git:git://github.com/killbill/standalone-queue.git</connection>
+        <developerConnection>scm:git:git@github.com:killbill/standalone-queue.git</developerConnection>
+        <tag>HEAD</tag>
+        <url>http://github.com/killbill/standalone-queue/tree/master</url>
+    </scm>
+    <issueManagement>
+        <system>Github</system>
+        <url>https://github.com/killbill/standalone-queue/issues</url>
+    </issueManagement>
+    <properties>
+        <check.skip-rat>true</check.skip-rat>
+        <check.skip-spotbugs>true</check.skip-spotbugs>
+        <!-- 1.32.1 is out -->
+        <grpc.version>1.30.0</grpc.version>
+        <release.release-profiles />
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>3.12.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-api</artifactId>
+            <version>${grpc.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-protobuf</artifactId>
+            <version>${grpc.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-stub</artifactId>
+            <version>${grpc.version}</version>
+        </dependency>
+    </dependencies>
+</project>
