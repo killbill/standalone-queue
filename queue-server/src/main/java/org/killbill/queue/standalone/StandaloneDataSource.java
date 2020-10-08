@@ -15,7 +15,7 @@
  * under the License.
  */
 
-package org.killbill.bus.integration;
+package org.killbill.queue.standalone;
 
 import javax.sql.DataSource;
 

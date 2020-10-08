@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -15,41 +15,38 @@
  * under the License.
  */
 
-package org.killbill.bus.integration;
+package org.killbill.queue.standalone;
 
-import java.util.concurrent.atomic.AtomicLong;
-
+import org.joda.time.DateTime;
+import org.killbill.notificationq.api.NotificationEvent;
+import org.killbill.notificationq.api.NotificationQueueService.NotificationQueueHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.AllowConcurrentEvents;
-import com.google.common.eventbus.Subscribe;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 
+public class StandaloneNotificationQueueHandler implements NotificationQueueHandler {
 
-public class StandaloneBusHandler {
-
-    private final Logger logger = LoggerFactory.getLogger(StandaloneBusHandler.class);
+    private final Logger logger = LoggerFactory.getLogger(StandaloneNotificationQueueHandler.class);
 
 
     private final AtomicLong counter;
 
     private final long sleepTimeMsec = 10;
 
-    public StandaloneBusHandler() {
+    public StandaloneNotificationQueueHandler() {
         this.counter = new AtomicLong();
-
-        logger.info("BusHandler configured to sleep {} mSec", sleepTimeMsec);
+        logger.info("NotificationHandler configured to sleep {} mSec", sleepTimeMsec);
     }
 
-    @AllowConcurrentEvents
-    @Subscribe
-    public void dispatchEvent(final StandaloneBusEvent event) {
+
+    @Override
+    public void handleReadyNotification(final NotificationEvent event, final DateTime eventDateTime, final UUID userToken, final Long searchKey1, final Long searchKey2) {
         long dispatched = counter.incrementAndGet();
 
         sleepIfRequired();
-
     }
-
 
     private void sleepIfRequired() {
         if (sleepTimeMsec > 0) {
@@ -60,4 +57,5 @@ public class StandaloneBusHandler {
             }
         }
     }
+
 }

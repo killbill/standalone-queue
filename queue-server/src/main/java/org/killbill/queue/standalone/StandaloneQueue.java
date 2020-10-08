@@ -15,21 +15,19 @@
  * under the License.
  */
 
-package org.killbill.bus.integration;
+package org.killbill.queue.standalone;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
+
 import org.killbill.billing.queue.rpc.gen.EventMsg;
-import org.killbill.notificationq.api.NotificationEvent;
 
-public class StandaloneNotificationEvent implements NotificationEvent {
+public interface StandaloneQueue {
 
+    public void start() throws Exception;
 
-    @JsonCreator
-    public StandaloneNotificationEvent() {
-    }
+    public void stop() throws Exception;
 
-    public StandaloneNotificationEvent(final EventMsg in, final String testName) {
-    }
+    public void postEntry(final EventMsg request) throws Exception;
 
+    public void insertEntryIntoQueue(final EventMsg request) throws Exception;
 
 }

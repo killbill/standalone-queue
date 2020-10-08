@@ -15,7 +15,7 @@
  * under the License.
  */
 
-package org.killbill.bus.integration;
+package org.killbill.queue.standalone;
 
 import com.codahale.metrics.JmxReporter;
 import com.codahale.metrics.MetricRegistry;
@@ -29,6 +29,7 @@ import org.killbill.commons.jdbi.notification.DatabaseTransactionNotificationApi
 import org.killbill.commons.jdbi.transaction.NotificationTransactionHandler;
 import org.killbill.queue.InTransaction;
 import org.killbill.queue.api.PersistentQueueConfig;
+import org.killbill.queue.standalone.rpc.QueueServer;
 import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.jdbi.v2.DBI;
@@ -39,8 +40,6 @@ import javax.sql.DataSource;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
-
-import static org.killbill.bus.integration.QueueServer.NANO_TO_MSEC;
 
 public abstract class StandaloneQueueBase implements StandaloneQueue {
 
@@ -144,7 +143,7 @@ public abstract class StandaloneQueueBase implements StandaloneQueue {
 
     private static double nanoToMSecIfMetricsTime(final String metricsName, double value) {
         if (metricsName.endsWith("Time")) {
-            return value / NANO_TO_MSEC;
+            return value / QueueServer.NANO_TO_MSEC;
         } else {
             return value;
         }

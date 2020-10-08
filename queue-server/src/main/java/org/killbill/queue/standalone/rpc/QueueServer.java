@@ -15,11 +15,12 @@
  * under the License.
  */
 
-package org.killbill.bus.integration;
+package org.killbill.queue.standalone.rpc;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import org.killbill.billing.queue.rpc.gen.QueueApiGrpc;
+import org.killbill.queue.standalone.StandaloneQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
