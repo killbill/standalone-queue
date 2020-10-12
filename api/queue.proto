@@ -3,7 +3,7 @@ syntax = "proto3";
 option java_multiple_files = true;
 option java_package = "org.killbill.billing.queue.rpc.gen";
 
-option go_package = "github.com/killbill/standalone-queue;queue";
+option go_package = "github.com/killbill/standalone-queue;queue-gen";
 
 package queue;
 
