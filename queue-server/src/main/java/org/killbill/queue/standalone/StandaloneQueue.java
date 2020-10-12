@@ -26,8 +26,6 @@ public interface StandaloneQueue {
 
     public void stop() throws Exception;
 
-    public void postEntry(final EventMsg request) throws Exception;
-
     public void insertEntryIntoQueue(final EventMsg request) throws Exception;
 
 }

@@ -105,6 +105,11 @@ public class ConfigModel {
         public String getPassword() {
             return password;
         }
+
+        public String getJdbcConn() {
+            return String.format("jdbc:postgres://%s:%d/%s", host, port, database);
+        }
+
     }
 
 }

@@ -69,13 +69,6 @@ public class StandaloneQueueBus extends StandaloneQueueBase implements Standalon
     }
 
     @Override
-    public void postEntry(final EventMsg request) throws EventBusException {
-        if (bus != null) {
-            bus.post(new StandaloneBusEvent(request));
-        }
-    }
-
-    @Override
     public void insertEntryIntoQueue(final EventMsg request) throws EventBusException {
         final PersistentBusSqlDao dao = dbi.onDemand(PersistentBusSqlDao.class);
         final StandaloneBusEvent entry = new StandaloneBusEvent(request);

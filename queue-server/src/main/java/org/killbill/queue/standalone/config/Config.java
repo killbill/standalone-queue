@@ -34,7 +34,7 @@ public class Config {
 
     private File getConfigFromResource() {
         final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        final File file = new File(classLoader.getResource("config/test.yml").getFile());
+        final File file = new File(classLoader.getResource(TEST_RESOURCE).getFile());
         return file;
     }
 

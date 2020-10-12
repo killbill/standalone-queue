@@ -18,44 +18,60 @@
 package org.killbill.queue.standalone;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.queue.rpc.gen.EventMsg;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationQueueService.NotificationQueueHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class StandaloneNotificationQueueHandler implements NotificationQueueHandler {
 
-    private final Logger logger = LoggerFactory.getLogger(StandaloneNotificationQueueHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(StandaloneNotificationQueueHandler.class);
 
+    private final Set<io.grpc.stub.StreamObserver<EventMsg>> observers;
 
-    private final AtomicLong counter;
-
-    private final long sleepTimeMsec = 10;
 
     public StandaloneNotificationQueueHandler() {
-        this.counter = new AtomicLong();
-        logger.info("NotificationHandler configured to sleep {} mSec", sleepTimeMsec);
+        this.observers = Collections.synchronizedSet(new HashSet<>());
     }
 
+    public void registerResponseObserver(final io.grpc.stub.StreamObserver<org.killbill.billing.queue.rpc.gen.EventMsg> responseObserver) {
+        observers.add(responseObserver);
+    }
 
     @Override
-    public void handleReadyNotification(final NotificationEvent event, final DateTime eventDateTime, final UUID userToken, final Long searchKey1, final Long searchKey2) {
-        long dispatched = counter.incrementAndGet();
+    public void handleReadyNotification(final NotificationEvent inputEvent, final DateTime eventDateTime, final UUID userToken, final Long searchKey1, final Long searchKey2) {
 
-        sleepIfRequired();
+        final String event = deserializeEvent(inputEvent);
+        final EventMsg.Builder msgBuilder = EventMsg.newBuilder();
+        // TODO
+        //msgBuilder.setQueueName(StandaloneQueueBase.QUEUE_NAME);
+        msgBuilder.setEventJson(event);
+        msgBuilder.setUserToken(userToken.toString());
+        msgBuilder.setFutureUserToken(null);
+        msgBuilder.setSearchKey1(searchKey1);
+        msgBuilder.setSearchKey2(searchKey2);
+        final EventMsg msg = msgBuilder.build();
+        for (io.grpc.stub.StreamObserver<org.killbill.billing.queue.rpc.gen.EventMsg> obs : observers) {
+            obs.onNext(msg);
+        }
     }
 
-    private void sleepIfRequired() {
-        if (sleepTimeMsec > 0) {
-            try {
-                Thread.sleep(sleepTimeMsec);
-            } catch (final Exception e) {
 
-            }
+    static String deserializeEvent(final NotificationEvent inputEvent) {
+        if (!(inputEvent instanceof StandaloneNotificationEvent)) {
+            logger.error("Unexpected type of event class={}, event={}",
+                    (inputEvent != null ? inputEvent.getClass() : null), inputEvent);
+            return null;
         }
+
+        final StandaloneNotificationEvent event = (StandaloneNotificationEvent) inputEvent;
+        return event.getEnvelope();
     }
 
 }

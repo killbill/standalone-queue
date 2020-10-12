@@ -45,7 +45,7 @@ public abstract class StandaloneQueueBase implements StandaloneQueue {
 
     // TODO
     private static final String MAX_POOL_CONNECTIONS = "13";
-    protected final String QUEUE_NAME = "embs-queue";
+    public final String QUEUE_NAME = "embs-queue";
 
     private final Logger logger = LoggerFactory.getLogger(StandaloneQueueBase.class);
 
