@@ -85,7 +85,7 @@ public class StandaloneQueueNotification extends StandaloneQueueBase implements 
         try {
             json = QueueObjectMapper.get().writeValueAsString(entry);
             final UUID userToken = UUID.fromString(request.getUserToken());
-            final NotificationEventModelDao model = new NotificationEventModelDao(request.getCreatingOwner(), clock.getUTCNow(), StandaloneNotificationEvent.class.getName(), json,
+            final NotificationEventModelDao model = new NotificationEventModelDao(request.getOwner(), clock.getUTCNow(), StandaloneNotificationEvent.class.getName(), json,
                     userToken, request.getSearchKey1(), request.getSearchKey2(), userToken, clock.getUTCNow(), QUEUE_NAME);
 
             dao.insertEntry(model, queueConfig.getTableName());

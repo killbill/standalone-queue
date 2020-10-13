@@ -13,12 +13,13 @@ import "google/protobuf/timestamp.proto";
 service QueueApi {
   rpc PostEvent (EventMsg) returns (PostEventResponse);
   rpc SubscribeEvents (SubscriptionRequest) returns (stream EventMsg);
+  rpc Close (CloseRequest) returns (CloseResponse);
 }
 
 
 message EventMsg {
-    string queue_name = 1;
-	string creating_owner = 2;
+	string owner = 1;
+    string queue_name = 2;
     string event_json = 3;
     string user_token = 4;
     string future_user_token = 5;
@@ -30,8 +31,17 @@ message EventMsg {
 message PostEventResponse {
 }
 
+
+message CloseRequest {
+	string owner = 1;
+}
+
+message CloseResponse {
+}
+
 message SubscriptionRequest {
-    int64 search_key2 = 1;
+    string owner = 1;
+    int64 search_key2 = 2;
 }
 
 message SubscriptionResponse {

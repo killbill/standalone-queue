@@ -8,28 +8,28 @@ public interface EventMsgOrBuilder extends
     com.google.protobuf.MessageOrBuilder {
 
   /**
-   * <code>string queue_name = 1;</code>
+   * <code>string owner = 1;</code>
+   * @return The owner.
+   */
+  java.lang.String getOwner();
+  /**
+   * <code>string owner = 1;</code>
+   * @return The bytes for owner.
+   */
+  com.google.protobuf.ByteString
+      getOwnerBytes();
+
+  /**
+   * <code>string queue_name = 2;</code>
    * @return The queueName.
    */
   java.lang.String getQueueName();
   /**
-   * <code>string queue_name = 1;</code>
+   * <code>string queue_name = 2;</code>
    * @return The bytes for queueName.
    */
   com.google.protobuf.ByteString
       getQueueNameBytes();
-
-  /**
-   * <code>string creating_owner = 2;</code>
-   * @return The creatingOwner.
-   */
-  java.lang.String getCreatingOwner();
-  /**
-   * <code>string creating_owner = 2;</code>
-   * @return The bytes for creatingOwner.
-   */
-  com.google.protobuf.ByteString
-      getCreatingOwnerBytes();
 
   /**
    * <code>string event_json = 3;</code>

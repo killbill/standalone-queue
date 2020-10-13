@@ -33,6 +33,8 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.concurrent.Executors;
 
+import static io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall;
+
 public class QueueServer {
 
     private static final Logger logger = LoggerFactory.getLogger(QueueServer.class);
@@ -133,7 +135,14 @@ public class QueueServer {
 
         public void subscribeEvents(org.killbill.billing.queue.rpc.gen.SubscriptionRequest request,
                                     io.grpc.stub.StreamObserver<org.killbill.billing.queue.rpc.gen.EventMsg> responseObserver) {
+            // TODO
 
+        }
+
+        public void close(org.killbill.billing.queue.rpc.gen.CloseRequest request,
+                          io.grpc.stub.StreamObserver<org.killbill.billing.queue.rpc.gen.CloseResponse> responseObserver) {
+
+            // TODO
 
         }
 

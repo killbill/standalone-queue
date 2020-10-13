@@ -16,8 +16,8 @@ private static final long serialVersionUID = 0L;
     super(builder);
   }
   private EventMsg() {
+    owner_ = "";
     queueName_ = "";
-    creatingOwner_ = "";
     eventJson_ = "";
     userToken_ = "";
     futureUserToken_ = "";
@@ -56,13 +56,13 @@ private static final long serialVersionUID = 0L;
           case 10: {
             java.lang.String s = input.readStringRequireUtf8();
 
-            queueName_ = s;
+            owner_ = s;
             break;
           }
           case 18: {
             java.lang.String s = input.readStringRequireUtf8();
 
-            creatingOwner_ = s;
+            queueName_ = s;
             break;
           }
           case 26: {
@@ -138,10 +138,48 @@ private static final long serialVersionUID = 0L;
             org.killbill.billing.queue.rpc.gen.EventMsg.class, org.killbill.billing.queue.rpc.gen.EventMsg.Builder.class);
   }
 
-  public static final int QUEUE_NAME_FIELD_NUMBER = 1;
+  public static final int OWNER_FIELD_NUMBER = 1;
+  private volatile java.lang.Object owner_;
+  /**
+   * <code>string owner = 1;</code>
+   * @return The owner.
+   */
+  @java.lang.Override
+  public java.lang.String getOwner() {
+    java.lang.Object ref = owner_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = 
+          (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      owner_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string owner = 1;</code>
+   * @return The bytes for owner.
+   */
+  @java.lang.Override
+  public com.google.protobuf.ByteString
+      getOwnerBytes() {
+    java.lang.Object ref = owner_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString.copyFromUtf8(
+              (java.lang.String) ref);
+      owner_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
+  public static final int QUEUE_NAME_FIELD_NUMBER = 2;
   private volatile java.lang.Object queueName_;
   /**
-   * <code>string queue_name = 1;</code>
+   * <code>string queue_name = 2;</code>
    * @return The queueName.
    */
   @java.lang.Override
@@ -158,7 +196,7 @@ private static final long serialVersionUID = 0L;
     }
   }
   /**
-   * <code>string queue_name = 1;</code>
+   * <code>string queue_name = 2;</code>
    * @return The bytes for queueName.
    */
   @java.lang.Override
@@ -170,44 +208,6 @@ private static final long serialVersionUID = 0L;
           com.google.protobuf.ByteString.copyFromUtf8(
               (java.lang.String) ref);
       queueName_ = b;
-      return b;
-    } else {
-      return (com.google.protobuf.ByteString) ref;
-    }
-  }
-
-  public static final int CREATING_OWNER_FIELD_NUMBER = 2;
-  private volatile java.lang.Object creatingOwner_;
-  /**
-   * <code>string creating_owner = 2;</code>
-   * @return The creatingOwner.
-   */
-  @java.lang.Override
-  public java.lang.String getCreatingOwner() {
-    java.lang.Object ref = creatingOwner_;
-    if (ref instanceof java.lang.String) {
-      return (java.lang.String) ref;
-    } else {
-      com.google.protobuf.ByteString bs = 
-          (com.google.protobuf.ByteString) ref;
-      java.lang.String s = bs.toStringUtf8();
-      creatingOwner_ = s;
-      return s;
-    }
-  }
-  /**
-   * <code>string creating_owner = 2;</code>
-   * @return The bytes for creatingOwner.
-   */
-  @java.lang.Override
-  public com.google.protobuf.ByteString
-      getCreatingOwnerBytes() {
-    java.lang.Object ref = creatingOwner_;
-    if (ref instanceof java.lang.String) {
-      com.google.protobuf.ByteString b = 
-          com.google.protobuf.ByteString.copyFromUtf8(
-              (java.lang.String) ref);
-      creatingOwner_ = b;
       return b;
     } else {
       return (com.google.protobuf.ByteString) ref;
@@ -390,11 +390,11 @@ private static final long serialVersionUID = 0L;
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output)
                       throws java.io.IOException {
-    if (!getQueueNameBytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 1, queueName_);
+    if (!getOwnerBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 1, owner_);
     }
-    if (!getCreatingOwnerBytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 2, creatingOwner_);
+    if (!getQueueNameBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 2, queueName_);
     }
     if (!getEventJsonBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 3, eventJson_);
@@ -423,11 +423,11 @@ private static final long serialVersionUID = 0L;
     if (size != -1) return size;
 
     size = 0;
-    if (!getQueueNameBytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, queueName_);
+    if (!getOwnerBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, owner_);
     }
-    if (!getCreatingOwnerBytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, creatingOwner_);
+    if (!getQueueNameBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, queueName_);
     }
     if (!getEventJsonBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, eventJson_);
@@ -465,10 +465,10 @@ private static final long serialVersionUID = 0L;
     }
     org.killbill.billing.queue.rpc.gen.EventMsg other = (org.killbill.billing.queue.rpc.gen.EventMsg) obj;
 
+    if (!getOwner()
+        .equals(other.getOwner())) return false;
     if (!getQueueName()
         .equals(other.getQueueName())) return false;
-    if (!getCreatingOwner()
-        .equals(other.getCreatingOwner())) return false;
     if (!getEventJson()
         .equals(other.getEventJson())) return false;
     if (!getUserToken()
@@ -495,10 +495,10 @@ private static final long serialVersionUID = 0L;
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
+    hash = (37 * hash) + OWNER_FIELD_NUMBER;
+    hash = (53 * hash) + getOwner().hashCode();
     hash = (37 * hash) + QUEUE_NAME_FIELD_NUMBER;
     hash = (53 * hash) + getQueueName().hashCode();
-    hash = (37 * hash) + CREATING_OWNER_FIELD_NUMBER;
-    hash = (53 * hash) + getCreatingOwner().hashCode();
     hash = (37 * hash) + EVENT_JSON_FIELD_NUMBER;
     hash = (53 * hash) + getEventJson().hashCode();
     hash = (37 * hash) + USER_TOKEN_FIELD_NUMBER;
@@ -648,9 +648,9 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public Builder clear() {
       super.clear();
-      queueName_ = "";
+      owner_ = "";
 
-      creatingOwner_ = "";
+      queueName_ = "";
 
       eventJson_ = "";
 
@@ -694,8 +694,8 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public org.killbill.billing.queue.rpc.gen.EventMsg buildPartial() {
       org.killbill.billing.queue.rpc.gen.EventMsg result = new org.killbill.billing.queue.rpc.gen.EventMsg(this);
+      result.owner_ = owner_;
       result.queueName_ = queueName_;
-      result.creatingOwner_ = creatingOwner_;
       result.eventJson_ = eventJson_;
       result.userToken_ = userToken_;
       result.futureUserToken_ = futureUserToken_;
@@ -754,12 +754,12 @@ private static final long serialVersionUID = 0L;
 
     public Builder mergeFrom(org.killbill.billing.queue.rpc.gen.EventMsg other) {
       if (other == org.killbill.billing.queue.rpc.gen.EventMsg.getDefaultInstance()) return this;
-      if (!other.getQueueName().isEmpty()) {
-        queueName_ = other.queueName_;
+      if (!other.getOwner().isEmpty()) {
+        owner_ = other.owner_;
         onChanged();
       }
-      if (!other.getCreatingOwner().isEmpty()) {
-        creatingOwner_ = other.creatingOwner_;
+      if (!other.getQueueName().isEmpty()) {
+        queueName_ = other.queueName_;
         onChanged();
       }
       if (!other.getEventJson().isEmpty()) {
@@ -812,9 +812,85 @@ private static final long serialVersionUID = 0L;
       return this;
     }
 
+    private java.lang.Object owner_ = "";
+    /**
+     * <code>string owner = 1;</code>
+     * @return The owner.
+     */
+    public java.lang.String getOwner() {
+      java.lang.Object ref = owner_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        owner_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string owner = 1;</code>
+     * @return The bytes for owner.
+     */
+    public com.google.protobuf.ByteString
+        getOwnerBytes() {
+      java.lang.Object ref = owner_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        owner_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string owner = 1;</code>
+     * @param value The owner to set.
+     * @return This builder for chaining.
+     */
+    public Builder setOwner(
+        java.lang.String value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  
+      owner_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string owner = 1;</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearOwner() {
+      
+      owner_ = getDefaultInstance().getOwner();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string owner = 1;</code>
+     * @param value The bytes for owner to set.
+     * @return This builder for chaining.
+     */
+    public Builder setOwnerBytes(
+        com.google.protobuf.ByteString value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+      
+      owner_ = value;
+      onChanged();
+      return this;
+    }
+
     private java.lang.Object queueName_ = "";
     /**
-     * <code>string queue_name = 1;</code>
+     * <code>string queue_name = 2;</code>
      * @return The queueName.
      */
     public java.lang.String getQueueName() {
@@ -830,7 +906,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>string queue_name = 1;</code>
+     * <code>string queue_name = 2;</code>
      * @return The bytes for queueName.
      */
     public com.google.protobuf.ByteString
@@ -847,7 +923,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>string queue_name = 1;</code>
+     * <code>string queue_name = 2;</code>
      * @param value The queueName to set.
      * @return This builder for chaining.
      */
@@ -862,7 +938,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>string queue_name = 1;</code>
+     * <code>string queue_name = 2;</code>
      * @return This builder for chaining.
      */
     public Builder clearQueueName() {
@@ -872,7 +948,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>string queue_name = 1;</code>
+     * <code>string queue_name = 2;</code>
      * @param value The bytes for queueName to set.
      * @return This builder for chaining.
      */
@@ -884,82 +960,6 @@ private static final long serialVersionUID = 0L;
   checkByteStringIsUtf8(value);
       
       queueName_ = value;
-      onChanged();
-      return this;
-    }
-
-    private java.lang.Object creatingOwner_ = "";
-    /**
-     * <code>string creating_owner = 2;</code>
-     * @return The creatingOwner.
-     */
-    public java.lang.String getCreatingOwner() {
-      java.lang.Object ref = creatingOwner_;
-      if (!(ref instanceof java.lang.String)) {
-        com.google.protobuf.ByteString bs =
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        creatingOwner_ = s;
-        return s;
-      } else {
-        return (java.lang.String) ref;
-      }
-    }
-    /**
-     * <code>string creating_owner = 2;</code>
-     * @return The bytes for creatingOwner.
-     */
-    public com.google.protobuf.ByteString
-        getCreatingOwnerBytes() {
-      java.lang.Object ref = creatingOwner_;
-      if (ref instanceof String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        creatingOwner_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-    /**
-     * <code>string creating_owner = 2;</code>
-     * @param value The creatingOwner to set.
-     * @return This builder for chaining.
-     */
-    public Builder setCreatingOwner(
-        java.lang.String value) {
-      if (value == null) {
-    throw new NullPointerException();
-  }
-  
-      creatingOwner_ = value;
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>string creating_owner = 2;</code>
-     * @return This builder for chaining.
-     */
-    public Builder clearCreatingOwner() {
-      
-      creatingOwner_ = getDefaultInstance().getCreatingOwner();
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>string creating_owner = 2;</code>
-     * @param value The bytes for creatingOwner to set.
-     * @return This builder for chaining.
-     */
-    public Builder setCreatingOwnerBytes(
-        com.google.protobuf.ByteString value) {
-      if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-      
-      creatingOwner_ = value;
       onChanged();
       return this;
     }

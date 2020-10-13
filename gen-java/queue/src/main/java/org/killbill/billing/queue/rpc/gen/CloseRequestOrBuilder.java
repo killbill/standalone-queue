@@ -3,8 +3,8 @@
 
 package org.killbill.billing.queue.rpc.gen;
 
-public interface SubscriptionRequestOrBuilder extends
-    // @@protoc_insertion_point(interface_extends:queue.SubscriptionRequest)
+public interface CloseRequestOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:queue.CloseRequest)
     com.google.protobuf.MessageOrBuilder {
 
   /**
@@ -18,10 +18,4 @@ public interface SubscriptionRequestOrBuilder extends
    */
   com.google.protobuf.ByteString
       getOwnerBytes();
-
-  /**
-   * <code>int64 search_key2 = 2;</code>
-   * @return The searchKey2.
-   */
-  long getSearchKey2();
 }

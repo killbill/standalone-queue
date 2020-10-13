@@ -4,18 +4,18 @@
 package org.killbill.billing.queue.rpc.gen;
 
 /**
- * Protobuf type {@code queue.SubscriptionRequest}
+ * Protobuf type {@code queue.CloseRequest}
  */
-public final class SubscriptionRequest extends
+public final class CloseRequest extends
     com.google.protobuf.GeneratedMessageV3 implements
-    // @@protoc_insertion_point(message_implements:queue.SubscriptionRequest)
-    SubscriptionRequestOrBuilder {
+    // @@protoc_insertion_point(message_implements:queue.CloseRequest)
+    CloseRequestOrBuilder {
 private static final long serialVersionUID = 0L;
-  // Use SubscriptionRequest.newBuilder() to construct.
-  private SubscriptionRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+  // Use CloseRequest.newBuilder() to construct.
+  private CloseRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
   }
-  private SubscriptionRequest() {
+  private CloseRequest() {
     owner_ = "";
   }
 
@@ -23,7 +23,7 @@ private static final long serialVersionUID = 0L;
   @SuppressWarnings({"unused"})
   protected java.lang.Object newInstance(
       UnusedPrivateParameter unused) {
-    return new SubscriptionRequest();
+    return new CloseRequest();
   }
 
   @java.lang.Override
@@ -31,7 +31,7 @@ private static final long serialVersionUID = 0L;
   getUnknownFields() {
     return this.unknownFields;
   }
-  private SubscriptionRequest(
+  private CloseRequest(
       com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
@@ -55,11 +55,6 @@ private static final long serialVersionUID = 0L;
             owner_ = s;
             break;
           }
-          case 16: {
-
-            searchKey2_ = input.readInt64();
-            break;
-          }
           default: {
             if (!parseUnknownField(
                 input, unknownFields, extensionRegistry, tag)) {
@@ -81,15 +76,15 @@ private static final long serialVersionUID = 0L;
   }
   public static final com.google.protobuf.Descriptors.Descriptor
       getDescriptor() {
-    return org.killbill.billing.queue.rpc.gen.Queue.internal_static_queue_SubscriptionRequest_descriptor;
+    return org.killbill.billing.queue.rpc.gen.Queue.internal_static_queue_CloseRequest_descriptor;
   }
 
   @java.lang.Override
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internalGetFieldAccessorTable() {
-    return org.killbill.billing.queue.rpc.gen.Queue.internal_static_queue_SubscriptionRequest_fieldAccessorTable
+    return org.killbill.billing.queue.rpc.gen.Queue.internal_static_queue_CloseRequest_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
-            org.killbill.billing.queue.rpc.gen.SubscriptionRequest.class, org.killbill.billing.queue.rpc.gen.SubscriptionRequest.Builder.class);
+            org.killbill.billing.queue.rpc.gen.CloseRequest.class, org.killbill.billing.queue.rpc.gen.CloseRequest.Builder.class);
   }
 
   public static final int OWNER_FIELD_NUMBER = 1;
@@ -130,17 +125,6 @@ private static final long serialVersionUID = 0L;
     }
   }
 
-  public static final int SEARCH_KEY2_FIELD_NUMBER = 2;
-  private long searchKey2_;
-  /**
-   * <code>int64 search_key2 = 2;</code>
-   * @return The searchKey2.
-   */
-  @java.lang.Override
-  public long getSearchKey2() {
-    return searchKey2_;
-  }
-
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -158,9 +142,6 @@ private static final long serialVersionUID = 0L;
     if (!getOwnerBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 1, owner_);
     }
-    if (searchKey2_ != 0L) {
-      output.writeInt64(2, searchKey2_);
-    }
     unknownFields.writeTo(output);
   }
 
@@ -173,10 +154,6 @@ private static final long serialVersionUID = 0L;
     if (!getOwnerBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, owner_);
     }
-    if (searchKey2_ != 0L) {
-      size += com.google.protobuf.CodedOutputStream
-        .computeInt64Size(2, searchKey2_);
-    }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
     return size;
@@ -187,15 +164,13 @@ private static final long serialVersionUID = 0L;
     if (obj == this) {
      return true;
     }
-    if (!(obj instanceof org.killbill.billing.queue.rpc.gen.SubscriptionRequest)) {
+    if (!(obj instanceof org.killbill.billing.queue.rpc.gen.CloseRequest)) {
       return super.equals(obj);
     }
-    org.killbill.billing.queue.rpc.gen.SubscriptionRequest other = (org.killbill.billing.queue.rpc.gen.SubscriptionRequest) obj;
+    org.killbill.billing.queue.rpc.gen.CloseRequest other = (org.killbill.billing.queue.rpc.gen.CloseRequest) obj;
 
     if (!getOwner()
         .equals(other.getOwner())) return false;
-    if (getSearchKey2()
-        != other.getSearchKey2()) return false;
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -209,77 +184,74 @@ private static final long serialVersionUID = 0L;
     hash = (19 * hash) + getDescriptor().hashCode();
     hash = (37 * hash) + OWNER_FIELD_NUMBER;
     hash = (53 * hash) + getOwner().hashCode();
-    hash = (37 * hash) + SEARCH_KEY2_FIELD_NUMBER;
-    hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
-        getSearchKey2());
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
   }
 
-  public static org.killbill.billing.queue.rpc.gen.SubscriptionRequest parseFrom(
+  public static org.killbill.billing.queue.rpc.gen.CloseRequest parseFrom(
       java.nio.ByteBuffer data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static org.killbill.billing.queue.rpc.gen.SubscriptionRequest parseFrom(
+  public static org.killbill.billing.queue.rpc.gen.CloseRequest parseFrom(
       java.nio.ByteBuffer data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static org.killbill.billing.queue.rpc.gen.SubscriptionRequest parseFrom(
+  public static org.killbill.billing.queue.rpc.gen.CloseRequest parseFrom(
       com.google.protobuf.ByteString data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static org.killbill.billing.queue.rpc.gen.SubscriptionRequest parseFrom(
+  public static org.killbill.billing.queue.rpc.gen.CloseRequest parseFrom(
       com.google.protobuf.ByteString data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static org.killbill.billing.queue.rpc.gen.SubscriptionRequest parseFrom(byte[] data)
+  public static org.killbill.billing.queue.rpc.gen.CloseRequest parseFrom(byte[] data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static org.killbill.billing.queue.rpc.gen.SubscriptionRequest parseFrom(
+  public static org.killbill.billing.queue.rpc.gen.CloseRequest parseFrom(
       byte[] data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static org.killbill.billing.queue.rpc.gen.SubscriptionRequest parseFrom(java.io.InputStream input)
+  public static org.killbill.billing.queue.rpc.gen.CloseRequest parseFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input);
   }
-  public static org.killbill.billing.queue.rpc.gen.SubscriptionRequest parseFrom(
+  public static org.killbill.billing.queue.rpc.gen.CloseRequest parseFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input, extensionRegistry);
   }
-  public static org.killbill.billing.queue.rpc.gen.SubscriptionRequest parseDelimitedFrom(java.io.InputStream input)
+  public static org.killbill.billing.queue.rpc.gen.CloseRequest parseDelimitedFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseDelimitedWithIOException(PARSER, input);
   }
-  public static org.killbill.billing.queue.rpc.gen.SubscriptionRequest parseDelimitedFrom(
+  public static org.killbill.billing.queue.rpc.gen.CloseRequest parseDelimitedFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
   }
-  public static org.killbill.billing.queue.rpc.gen.SubscriptionRequest parseFrom(
+  public static org.killbill.billing.queue.rpc.gen.CloseRequest parseFrom(
       com.google.protobuf.CodedInputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input);
   }
-  public static org.killbill.billing.queue.rpc.gen.SubscriptionRequest parseFrom(
+  public static org.killbill.billing.queue.rpc.gen.CloseRequest parseFrom(
       com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
@@ -292,7 +264,7 @@ private static final long serialVersionUID = 0L;
   public static Builder newBuilder() {
     return DEFAULT_INSTANCE.toBuilder();
   }
-  public static Builder newBuilder(org.killbill.billing.queue.rpc.gen.SubscriptionRequest prototype) {
+  public static Builder newBuilder(org.killbill.billing.queue.rpc.gen.CloseRequest prototype) {
     return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
   }
   @java.lang.Override
@@ -308,26 +280,26 @@ private static final long serialVersionUID = 0L;
     return builder;
   }
   /**
-   * Protobuf type {@code queue.SubscriptionRequest}
+   * Protobuf type {@code queue.CloseRequest}
    */
   public static final class Builder extends
       com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-      // @@protoc_insertion_point(builder_implements:queue.SubscriptionRequest)
-      org.killbill.billing.queue.rpc.gen.SubscriptionRequestOrBuilder {
+      // @@protoc_insertion_point(builder_implements:queue.CloseRequest)
+      org.killbill.billing.queue.rpc.gen.CloseRequestOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return org.killbill.billing.queue.rpc.gen.Queue.internal_static_queue_SubscriptionRequest_descriptor;
+      return org.killbill.billing.queue.rpc.gen.Queue.internal_static_queue_CloseRequest_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.killbill.billing.queue.rpc.gen.Queue.internal_static_queue_SubscriptionRequest_fieldAccessorTable
+      return org.killbill.billing.queue.rpc.gen.Queue.internal_static_queue_CloseRequest_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.killbill.billing.queue.rpc.gen.SubscriptionRequest.class, org.killbill.billing.queue.rpc.gen.SubscriptionRequest.Builder.class);
+              org.killbill.billing.queue.rpc.gen.CloseRequest.class, org.killbill.billing.queue.rpc.gen.CloseRequest.Builder.class);
     }
 
-    // Construct using org.killbill.billing.queue.rpc.gen.SubscriptionRequest.newBuilder()
+    // Construct using org.killbill.billing.queue.rpc.gen.CloseRequest.newBuilder()
     private Builder() {
       maybeForceBuilderInitialization();
     }
@@ -347,25 +319,23 @@ private static final long serialVersionUID = 0L;
       super.clear();
       owner_ = "";
 
-      searchKey2_ = 0L;
-
       return this;
     }
 
     @java.lang.Override
     public com.google.protobuf.Descriptors.Descriptor
         getDescriptorForType() {
-      return org.killbill.billing.queue.rpc.gen.Queue.internal_static_queue_SubscriptionRequest_descriptor;
+      return org.killbill.billing.queue.rpc.gen.Queue.internal_static_queue_CloseRequest_descriptor;
     }
 
     @java.lang.Override
-    public org.killbill.billing.queue.rpc.gen.SubscriptionRequest getDefaultInstanceForType() {
-      return org.killbill.billing.queue.rpc.gen.SubscriptionRequest.getDefaultInstance();
+    public org.killbill.billing.queue.rpc.gen.CloseRequest getDefaultInstanceForType() {
+      return org.killbill.billing.queue.rpc.gen.CloseRequest.getDefaultInstance();
     }
 
     @java.lang.Override
-    public org.killbill.billing.queue.rpc.gen.SubscriptionRequest build() {
-      org.killbill.billing.queue.rpc.gen.SubscriptionRequest result = buildPartial();
+    public org.killbill.billing.queue.rpc.gen.CloseRequest build() {
+      org.killbill.billing.queue.rpc.gen.CloseRequest result = buildPartial();
       if (!result.isInitialized()) {
         throw newUninitializedMessageException(result);
       }
@@ -373,10 +343,9 @@ private static final long serialVersionUID = 0L;
     }
 
     @java.lang.Override
-    public org.killbill.billing.queue.rpc.gen.SubscriptionRequest buildPartial() {
-      org.killbill.billing.queue.rpc.gen.SubscriptionRequest result = new org.killbill.billing.queue.rpc.gen.SubscriptionRequest(this);
+    public org.killbill.billing.queue.rpc.gen.CloseRequest buildPartial() {
+      org.killbill.billing.queue.rpc.gen.CloseRequest result = new org.killbill.billing.queue.rpc.gen.CloseRequest(this);
       result.owner_ = owner_;
-      result.searchKey2_ = searchKey2_;
       onBuilt();
       return result;
     }
@@ -415,22 +384,19 @@ private static final long serialVersionUID = 0L;
     }
     @java.lang.Override
     public Builder mergeFrom(com.google.protobuf.Message other) {
-      if (other instanceof org.killbill.billing.queue.rpc.gen.SubscriptionRequest) {
-        return mergeFrom((org.killbill.billing.queue.rpc.gen.SubscriptionRequest)other);
+      if (other instanceof org.killbill.billing.queue.rpc.gen.CloseRequest) {
+        return mergeFrom((org.killbill.billing.queue.rpc.gen.CloseRequest)other);
       } else {
         super.mergeFrom(other);
         return this;
       }
     }
 
-    public Builder mergeFrom(org.killbill.billing.queue.rpc.gen.SubscriptionRequest other) {
-      if (other == org.killbill.billing.queue.rpc.gen.SubscriptionRequest.getDefaultInstance()) return this;
+    public Builder mergeFrom(org.killbill.billing.queue.rpc.gen.CloseRequest other) {
+      if (other == org.killbill.billing.queue.rpc.gen.CloseRequest.getDefaultInstance()) return this;
       if (!other.getOwner().isEmpty()) {
         owner_ = other.owner_;
         onChanged();
-      }
-      if (other.getSearchKey2() != 0L) {
-        setSearchKey2(other.getSearchKey2());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -447,11 +413,11 @@ private static final long serialVersionUID = 0L;
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      org.killbill.billing.queue.rpc.gen.SubscriptionRequest parsedMessage = null;
+      org.killbill.billing.queue.rpc.gen.CloseRequest parsedMessage = null;
       try {
         parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        parsedMessage = (org.killbill.billing.queue.rpc.gen.SubscriptionRequest) e.getUnfinishedMessage();
+        parsedMessage = (org.killbill.billing.queue.rpc.gen.CloseRequest) e.getUnfinishedMessage();
         throw e.unwrapIOException();
       } finally {
         if (parsedMessage != null) {
@@ -536,37 +502,6 @@ private static final long serialVersionUID = 0L;
       onChanged();
       return this;
     }
-
-    private long searchKey2_ ;
-    /**
-     * <code>int64 search_key2 = 2;</code>
-     * @return The searchKey2.
-     */
-    @java.lang.Override
-    public long getSearchKey2() {
-      return searchKey2_;
-    }
-    /**
-     * <code>int64 search_key2 = 2;</code>
-     * @param value The searchKey2 to set.
-     * @return This builder for chaining.
-     */
-    public Builder setSearchKey2(long value) {
-      
-      searchKey2_ = value;
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>int64 search_key2 = 2;</code>
-     * @return This builder for chaining.
-     */
-    public Builder clearSearchKey2() {
-      
-      searchKey2_ = 0L;
-      onChanged();
-      return this;
-    }
     @java.lang.Override
     public final Builder setUnknownFields(
         final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -580,41 +515,41 @@ private static final long serialVersionUID = 0L;
     }
 
 
-    // @@protoc_insertion_point(builder_scope:queue.SubscriptionRequest)
+    // @@protoc_insertion_point(builder_scope:queue.CloseRequest)
   }
 
-  // @@protoc_insertion_point(class_scope:queue.SubscriptionRequest)
-  private static final org.killbill.billing.queue.rpc.gen.SubscriptionRequest DEFAULT_INSTANCE;
+  // @@protoc_insertion_point(class_scope:queue.CloseRequest)
+  private static final org.killbill.billing.queue.rpc.gen.CloseRequest DEFAULT_INSTANCE;
   static {
-    DEFAULT_INSTANCE = new org.killbill.billing.queue.rpc.gen.SubscriptionRequest();
+    DEFAULT_INSTANCE = new org.killbill.billing.queue.rpc.gen.CloseRequest();
   }
 
-  public static org.killbill.billing.queue.rpc.gen.SubscriptionRequest getDefaultInstance() {
+  public static org.killbill.billing.queue.rpc.gen.CloseRequest getDefaultInstance() {
     return DEFAULT_INSTANCE;
   }
 
-  private static final com.google.protobuf.Parser<SubscriptionRequest>
-      PARSER = new com.google.protobuf.AbstractParser<SubscriptionRequest>() {
+  private static final com.google.protobuf.Parser<CloseRequest>
+      PARSER = new com.google.protobuf.AbstractParser<CloseRequest>() {
     @java.lang.Override
-    public SubscriptionRequest parsePartialFrom(
+    public CloseRequest parsePartialFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      return new SubscriptionRequest(input, extensionRegistry);
+      return new CloseRequest(input, extensionRegistry);
     }
   };
 
-  public static com.google.protobuf.Parser<SubscriptionRequest> parser() {
+  public static com.google.protobuf.Parser<CloseRequest> parser() {
     return PARSER;
   }
 
   @java.lang.Override
-  public com.google.protobuf.Parser<SubscriptionRequest> getParserForType() {
+  public com.google.protobuf.Parser<CloseRequest> getParserForType() {
     return PARSER;
   }
 
   @java.lang.Override
-  public org.killbill.billing.queue.rpc.gen.SubscriptionRequest getDefaultInstanceForType() {
+  public org.killbill.billing.queue.rpc.gen.CloseRequest getDefaultInstanceForType() {
     return DEFAULT_INSTANCE;
   }
 
