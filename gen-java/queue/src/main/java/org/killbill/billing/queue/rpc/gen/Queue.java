@@ -55,9 +55,9 @@ public final class Queue {
       "onse2\204\001\n\010QueueApi\0226\n\tPostEvent\022\017.queue.E" +
       "ventMsg\032\030.queue.PostEventResponse\022@\n\017Sub" +
       "scribeEvents\022\032.queue.SubscriptionRequest" +
-      "\032\017.queue.EventMsg0\001BV\n\"org.killbill.bill" +
-      "ing.queue.rpc.genP\001Z.github.com/killbill" +
-      "/standalone-queue;queue-genb\006proto3"
+      "\032\017.queue.EventMsg0\001BR\n\"org.killbill.bill" +
+      "ing.queue.rpc.genP\001Z*github.com/killbill" +
+      "/standalone-queue;queueb\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
