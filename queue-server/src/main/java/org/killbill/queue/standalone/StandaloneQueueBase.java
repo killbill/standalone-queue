@@ -92,6 +92,7 @@ public abstract class StandaloneQueueBase implements StandaloneQueue {
         logger.info("Stopped test instance {}, (shutdown pool={})", QUEUE_NAME, shutdownPool);
     }
 
+    // TODO metrics
     public long getNbEvents() {
         return nbEvents.get();
     }
@@ -120,6 +121,7 @@ public abstract class StandaloneQueueBase implements StandaloneQueue {
         return dbi;
     }
 
+    // TODO move to config
     private DaoConfig setupDaoConfig(final String jdbcConnection,
                                      final String username,
                                      final String password,

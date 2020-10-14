@@ -17,17 +17,14 @@
 
 package org.killbill.queue.standalone;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.killbill.billing.queue.rpc.gen.EventMsg;
-import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.notificationq.DefaultNotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueConfig;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueueService.NotificationQueueAlreadyExists;
-import org.killbill.notificationq.dao.NotificationEventModelDao;
-import org.killbill.notificationq.dao.NotificationSqlDao;
-import org.killbill.queue.QueueObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +36,7 @@ public class StandaloneQueueNotification extends StandaloneQueueBase implements 
 
     // TODO config
     private static final String SVC_NAME = "embs-svc";
-
+    // embs-svc:embs-queue -> {DefaultNotificationQueue@4575} "DefaultNotificationQueue{svcName='embs-svc', queueName='embs-queue'}"
     private final StandaloneNotificationQueueHandler notificationQueueHandler;
     private final NotificationQueueService notificationQueueService;
     private final NotificationQueue notificationQueue;
@@ -61,6 +58,7 @@ public class StandaloneQueueNotification extends StandaloneQueueBase implements 
     @Override
     public void start() {
         if (notificationQueue != null) {
+            notificationQueue.initQueue();
             notificationQueue.startQueue();
         }
         logger.info("Started test instance {}", QUEUE_NAME);
@@ -77,21 +75,19 @@ public class StandaloneQueueNotification extends StandaloneQueueBase implements 
     }
 
     @Override
-    public void insertEntryIntoQueue(final EventMsg request) throws EventBusException {
-        final NotificationSqlDao dao = dbi.onDemand(NotificationSqlDao.class);
-
+    public void insertEntryIntoQueue(final EventMsg request) throws Exception {
         final StandaloneNotificationEvent entry = new StandaloneNotificationEvent(request.getEventJson());
-        final String json;
-        try {
-            json = QueueObjectMapper.get().writeValueAsString(entry);
-            final UUID userToken = UUID.fromString(request.getUserToken());
-            final NotificationEventModelDao model = new NotificationEventModelDao(request.getOwner(), clock.getUTCNow(), StandaloneNotificationEvent.class.getName(), json,
-                    userToken, request.getSearchKey1(), request.getSearchKey2(), userToken, clock.getUTCNow(), QUEUE_NAME);
+        final UUID userToken = UUID.fromString(request.getUserToken());
+        final DateTime effectiveDate = new DateTime(request.getEffectiveDate().getSeconds() * 1000L, DateTimeZone.UTC);
+        notificationQueue.recordFutureNotification(effectiveDate, entry, userToken, request.getSearchKey1(), request.getSearchKey2());
+    }
 
-            dao.insertEntry(model, queueConfig.getTableName());
-        } catch (final JsonProcessingException e) {
-            throw new EventBusException("Unable to serialize event " + entry);
-        }
+    public void registerResponseObserver(final String owner, final io.grpc.stub.StreamObserver<org.killbill.billing.queue.rpc.gen.EventMsg> responseObserver) {
+        notificationQueueHandler.registerResponseObserver(owner, responseObserver);
+    }
+
+    public void unregisterResponseObserver(final String owner) {
+        notificationQueueHandler.unregisterResponseObserver(owner);
     }
 
 }

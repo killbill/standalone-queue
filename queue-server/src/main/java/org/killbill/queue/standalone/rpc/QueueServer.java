@@ -19,9 +19,9 @@ package org.killbill.queue.standalone.rpc;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import org.killbill.billing.queue.rpc.gen.PostEventResponse;
 import org.killbill.billing.queue.rpc.gen.QueueApiGrpc;
-import org.killbill.bus.api.PersistentBus;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.queue.standalone.StandaloneQueueNotification;
 import org.killbill.queue.standalone.config.Config;
@@ -32,8 +32,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.concurrent.Executors;
-
-import static io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall;
+import java.util.concurrent.TimeUnit;
 
 public class QueueServer {
 
@@ -94,7 +93,13 @@ public class QueueServer {
         public QueueGRPCServer(final int port,
                                final int grpcThreads,
                                final StandaloneQueueNotification queue) {
-            this.server = ServerBuilder.forPort(port)
+
+            final NettyServerBuilder serverBuilder = (NettyServerBuilder) ServerBuilder.forPort(port);
+            this.server = serverBuilder.keepAliveTime(5, TimeUnit.SECONDS) // Ping the client if it is idle for 5 seconds to ensure the connection is still active
+                    .keepAliveTimeout(1, TimeUnit.SECONDS) // Wait 1 second for the ping ack before assuming the connection is dead
+                    .maxConnectionIdle(15, TimeUnit.SECONDS)  // If a client is idle for 15 seconds, send a GOAWAY
+                    //.maxConnectionAge(30, TimeUnit.SECONDS) // If any connection is alive for more than 30 seconds, send a GOAWAY
+                    //.maxConnectionAgeGrace(5, TimeUnit.SECONDS) //  // Allow 5 seconds for pending RPCs to complete before forcibly closing connections
                     .executor(Executors.newFixedThreadPool(grpcThreads))
                     .addService(new QueueService(queue))
                     .build();
@@ -123,32 +128,32 @@ public class QueueServer {
                               io.grpc.stub.StreamObserver<org.killbill.billing.queue.rpc.gen.PostEventResponse> responseObserver) {
 
 
-
             try {
                 queue.insertEntryIntoQueue(request);
                 responseObserver.onNext(PostEventResponse.newBuilder().build());
                 responseObserver.onCompleted();
-            } catch (final PersistentBus.EventBusException e) {
+            } catch (final Exception e) {
                 responseObserver.onError(e);
             }
         }
 
         public void subscribeEvents(org.killbill.billing.queue.rpc.gen.SubscriptionRequest request,
                                     io.grpc.stub.StreamObserver<org.killbill.billing.queue.rpc.gen.EventMsg> responseObserver) {
-            // TODO
-
+            queue.registerResponseObserver(request.getOwner(), responseObserver);
         }
 
         public void close(org.killbill.billing.queue.rpc.gen.CloseRequest request,
                           io.grpc.stub.StreamObserver<org.killbill.billing.queue.rpc.gen.CloseResponse> responseObserver) {
-
-            // TODO
-
+            queue.unregisterResponseObserver(request.getOwner());
         }
 
     }
 
     public static void main(final String[] args) throws IOException, InterruptedException, URISyntaxException, NotificationQueueService.NotificationQueueAlreadyExists {
+
+        // TODO logging
+        System.setProperty("org.slf4j.simpleLogger.logFile", "logger.simple");
+
         final ConfigModel config = (new Config()).getConfig();
         final QueueServer queueServer = new QueueServer(config);
         queueServer.start();

@@ -31,8 +31,7 @@
         <check.skip-enforcer>true</check.skip-enforcer>
         <check.skip-rat>true</check.skip-rat>
         <check.skip-spotbugs>true</check.skip-spotbugs>
-        <!-- 1.32.1 is out -->
-        <grpc.version>1.30.0</grpc.version>
+        <grpc.version>1.32.2</grpc.version>
     </properties>
 
     <dependencies>
@@ -83,6 +82,11 @@
         </dependency>
         <dependency>
             <groupId>io.grpc</groupId>
+            <artifactId>grpc-netty-shaded</artifactId>
+            <version>${grpc.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
             <artifactId>grpc-stub</artifactId>
             <version>${grpc.version}</version>
             <exclusions>
@@ -124,6 +128,10 @@
             <artifactId>mariadb-java-client</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.skife.config</groupId>
             <artifactId>config-magic</artifactId>
         </dependency>
@@ -134,7 +142,6 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>

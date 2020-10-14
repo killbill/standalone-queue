@@ -17,6 +17,8 @@
 
 package org.killbill.queue.standalone;
 
+import com.google.common.collect.Maps;
+import io.grpc.stub.StreamObserver;
 import org.joda.time.DateTime;
 import org.killbill.billing.queue.rpc.gen.EventMsg;
 import org.killbill.notificationq.api.NotificationEvent;
@@ -24,41 +26,63 @@ import org.killbill.notificationq.api.NotificationQueueService.NotificationQueue
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Map;
 import java.util.UUID;
 
 public class StandaloneNotificationQueueHandler implements NotificationQueueHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(StandaloneNotificationQueueHandler.class);
 
-    private final Set<io.grpc.stub.StreamObserver<EventMsg>> observers;
+    private final Map<String, StreamObserver<EventMsg>> observers;
 
 
     public StandaloneNotificationQueueHandler() {
-        this.observers = Collections.synchronizedSet(new HashSet<>());
+        this.observers = Maps.newConcurrentMap();
     }
 
-    public void registerResponseObserver(final io.grpc.stub.StreamObserver<org.killbill.billing.queue.rpc.gen.EventMsg> responseObserver) {
-        observers.add(responseObserver);
+    public void registerResponseObserver(final String owner, final io.grpc.stub.StreamObserver<org.killbill.billing.queue.rpc.gen.EventMsg> responseObserver) {
+        final StreamObserver<EventMsg> prev = observers.remove(owner);
+        if (prev != null) {
+            closeStream(owner, prev);
+        }
+        logger.info("Adding observer stream owner={}", owner);
+        observers.put(owner, responseObserver);
+    }
+
+    public void unregisterResponseObserver(final String owner) {
+        final StreamObserver<EventMsg> prev = observers.remove(owner);
+        if (prev != null) {
+            try {
+                closeStream(owner, prev);
+            } catch (final io.grpc.StatusRuntimeException e) {
+                logger.info("Ignoring exception owner={}, e={}", owner, e);
+
+            }
+        }
+    }
+
+    private void closeStream(final String owner, final StreamObserver<EventMsg> stream) {
+        logger.info("Closing stream owner={}", owner);
+        stream.onCompleted();
     }
 
     @Override
     public void handleReadyNotification(final NotificationEvent inputEvent, final DateTime eventDateTime, final UUID userToken, final Long searchKey1, final Long searchKey2) {
 
-        final String event = deserializeEvent(inputEvent);
-        final EventMsg.Builder msgBuilder = EventMsg.newBuilder();
-        // TODO
-        //msgBuilder.setQueueName(StandaloneQueueBase.QUEUE_NAME);
-        msgBuilder.setEventJson(event);
-        msgBuilder.setUserToken(userToken.toString());
-        msgBuilder.setFutureUserToken(null);
-        msgBuilder.setSearchKey1(searchKey1);
-        msgBuilder.setSearchKey2(searchKey2);
-        final EventMsg msg = msgBuilder.build();
-        for (io.grpc.stub.StreamObserver<org.killbill.billing.queue.rpc.gen.EventMsg> obs : observers) {
-            obs.onNext(msg);
+        synchronized (this) {
+            final String event = deserializeEvent(inputEvent);
+            final EventMsg.Builder msgBuilder = EventMsg.newBuilder();
+
+            // TODO
+            //msgBuilder.setQueueName(StandaloneQueueBase.QUEUE_NAME);
+            msgBuilder.setEventJson(event);
+            msgBuilder.setUserToken(userToken.toString());
+            msgBuilder.setSearchKey1(searchKey1);
+            msgBuilder.setSearchKey2(searchKey2);
+            final EventMsg msg = msgBuilder.build();
+            for (io.grpc.stub.StreamObserver<org.killbill.billing.queue.rpc.gen.EventMsg> obs : observers.values()) {
+                obs.onNext(msg);
+            }
         }
     }
 

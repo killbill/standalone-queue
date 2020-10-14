@@ -26,6 +26,7 @@ public class StandaloneNotificationEvent implements NotificationEvent {
 
     private String envelope;
 
+    // Required for jackson
     public StandaloneNotificationEvent() {
     }
 

@@ -9,9 +9,11 @@ import (
 	"os"
 	"sync"
 	"time"
+
 	qapi "github.com/killbill/standalone-queue/gen-go/api"
 	"golang.org/x/time/rate"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
 
 	"github.com/killbill/standalone-queue/src/queue"
 )
@@ -135,8 +137,12 @@ func NewGradLimiter(warmup string, targetRate float64, unused WarmupStrategy) *G
 func createConnection(serverAddr string) *grpc.ClientConn {
 
 	var opts []grpc.DialOption
-	opts = append(opts, grpc.WithInsecure())
-
+	var kacp = keepalive.ClientParameters{
+		Time:                10 * time.Second, // send pings every 10 seconds if there is no activity
+		Timeout:             time.Second,      // wait 1 second for ping ack before considering the connection dead
+		PermitWithoutStream: true,             // send pings even without active streams
+	}
+	opts = append(opts, grpc.WithInsecure(), grpc.WithKeepaliveParams(kacp))
 	conn, err := grpc.Dial(serverAddr, opts...)
 	if err != nil {
 		log.Fatalf("fail to create connection: %v", err)
@@ -152,38 +158,58 @@ func doTest(warmup string, targetRate float64, nbEvents int, queue queue.Queue) 
 
 	limiter := NewGradLimiter(warmup, targetRate, Linear)
 
-	curEvents := 0
 	isStopping := false
 
 	// Rate limiting
 	bctx := context.Background()
 
-	// TODO
-	evtChan := make(chan *qapi.EventMsg, 1000)
-	go func() {
-		queue.SubscribeEvents(bctx, evtChan)
-		for evt := range evtChan {
-			fmt.Printf("[doTest] Got event... %s\n", evt.EventJson)
-		}
-	}()
 
-	for isStopping {
+	evtChan := make(chan *qapi.EventMsg, 1000)
+	queue.SubscribeEvents(bctx, evtChan)
+
+	doneCh := make(chan interface{})
+	go func(evtCh <-chan *qapi.EventMsg, doneCh chan<- interface{}) {
+		// TODO
+		curRvc := 0
+		for evt := range evtCh {
+			curRvc += 1
+
+			if curRvc % 50 == 0 {
+				fmt.Printf("[doTest] Rcv curRvc=%d\n", curRvc)
+				fmt.Printf("[doTest] Got event... %s\n", evt.EventJson)
+			}
+
+			if nbEvents > 0 && curRvc >= nbEvents {
+				fmt.Printf("[doTest] Rcv all events, curRvc=%d\n", curRvc)
+				break
+			}
+		}
+		fmt.Printf("[doTest] Rcv %d events...\n", curRvc)
+		doneCh <- struct{}{}
+	}(evtChan, doneCh)
+
+	curSent := 0
+	for !isStopping {
 
 		limiter.Wait(bctx)
-
-		curEvents += 1
-
 		queue.PostEvent(bctx,"{\"foo\":\"something\",\"bar\":\"fab44c43-7a92-41f8-8adf-9234ba7b5b8f\",\"date\":\"2020-10-13T02:30:45.966Z\",\"isActive\":true}")
+		curSent += 1
 
-		if nbEvents > 0 && nbEvents >= curEvents {
-			fmt.Printf("[doTest] Sent all event, nbEvents=%d\n", nbEvents)
-			break
+		if curSent % 50 == 0 {
+			fmt.Printf("[doTest] Sent curSent=%d\n", curSent)
 		}
 
+		if nbEvents > 0 && curSent >= nbEvents {
+			fmt.Printf("[doTest] Sent all events, curSent=%d\n", curSent)
+			break
+		}
 	}
-	close(evtChan)
+
+	<- doneCh
 
 	fmt.Printf("[doTest] Exiting...\n")
+	queue.Close(bctx)
+
 }
 
 
@@ -202,14 +228,16 @@ func RandStringRunes(n int) string {
 }
 func main() {
 
-	serverAddr := flag.String("serverAddr", "127.0.0.1:21345", "Address of the server")
-	rateEvents := flag.Float64("rateEvents", 50.0, "Nb events/sec")
-	warmupSeq := flag.String("warmup", "20s", "Time period for the warmup. e.g 30s")
-	nbEvents := flag.Int("nbEvents", 3000, "Nb events or -1 for infinite")
+	serverAddr := flag.String("serverAddr", "127.0.0.1:9999", "Address of the server")
+	rateEvents := flag.Float64("rateEvents", 100.0, "Nb events/sec")
+	warmupSeq := flag.String("warmup", "10s", "Time period for the warmup. e.g 30s")
+	nbEvents := flag.Int("nbEvents", 100000, "Nb events or -1 for infinite")
+
+
 
 	flag.Parse()
 
-	s := fmt.Sprintf("Starting test: server=%s, rateEvents=%f, warmup=%s, nbEvents=%d\n", *serverAddr, *rateEvents, *warmupSeq, nbEvents)
+	s := fmt.Sprintf("Starting test: server=%s, rateEvents=%f, warmup=%s, nbEvents=%d\n", *serverAddr, *rateEvents, *warmupSeq, *nbEvents)
 	s += fmt.Sprintf("\n")
 	fmt.Printf(s)
 
@@ -225,4 +253,7 @@ func main() {
 	api := queue.NewQueue(owner, int64(searchKey1), int64(searchKey2), testConn)
 
 	doTest(*warmupSeq, *rateEvents, *nbEvents, api)
+
+	fmt.Printf("main Exiting...\n")
+
 }
