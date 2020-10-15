@@ -27,7 +27,7 @@
 
     <properties>
         <check.fail-enforcer>false</check.fail-enforcer>
-        <check.skip-dependency>true</check.skip-dependency>
+        <check.skip-dependency>false</check.skip-dependency>
         <check.skip-enforcer>true</check.skip-enforcer>
         <check.skip-rat>true</check.skip-rat>
         <check.skip-spotbugs>true</check.skip-spotbugs>
@@ -41,10 +41,6 @@
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
         <dependency>
@@ -55,10 +51,16 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
+        <!-- required for class file for com.google.inject.Provider not found -->
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
             <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>3.12.0</version>
         </dependency>
         <dependency>
             <groupId>com.zaxxer</groupId>
@@ -84,6 +86,12 @@
             <groupId>io.grpc</groupId>
             <artifactId>grpc-netty-shaded</artifactId>
             <version>${grpc.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>guava</artifactId>
+                    <groupId>com.google.guava</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.grpc</groupId>
@@ -107,6 +115,10 @@
             <optional>true</optional>
         </dependency>
         <dependency>
+            <groupId>org.kill-bill.billing</groupId>
+            <artifactId>killbill-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.kill-bill.billing.rpc</groupId>
             <artifactId>queue</artifactId>
             <version>0.0.1-SNAPSHOT</version>
@@ -114,10 +126,6 @@
         <dependency>
             <groupId>org.kill-bill.commons</groupId>
             <artifactId>killbill-clock</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.kill-bill.billing</groupId>
-            <artifactId>killbill-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.commons</groupId>
@@ -128,8 +136,8 @@
             <artifactId>killbill-queue</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.mariadb.jdbc</groupId>
-            <artifactId>mariadb-java-client</artifactId>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -144,14 +152,41 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
-    <build />
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>3.1.2</version>
+                    <executions>
+                        <execution>
+                            <id>default</id>
+                            <phase>process-test-classes</phase>
+                            <goals>
+                                <goal>analyze-only</goal>
+                                <goal>analyze-duplicate</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <skip>${check.skip-dependency}</skip>
+                        <failOnWarning>${check.fail-dependency}</failOnWarning>
+                        <ignoreNonCompile>true</ignoreNonCompile>
+                        <ignoredUnusedDeclaredDependencies>
+                            <!-- It doesn't always detect that org.osgi.framework.ServiceReference is used (by PluginConfigurationHandler for instance) -->
+                            <ignoredUnusedDeclaredDependency>com.google.inject:guice:jar:4.2.3</ignoredUnusedDeclaredDependency>
+                            <ignoredUnusedDeclaredDependency>org.postgresql:postgresql</ignoredUnusedDeclaredDependency>
+                            <ignoredUnusedDeclaredDependency>org.slf4j:slf4j-simple</ignoredUnusedDeclaredDependency>
+                        </ignoredUnusedDeclaredDependencies>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 </project>

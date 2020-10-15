@@ -88,7 +88,7 @@ func doTest(warmup string, targetRate float64, sendEvts int, rcvEvts int, displa
 func main() {
 
 	serverAddr := flag.String("serverAddr", "127.0.0.1:9999", "Address of the server")
-	rateEvents := flag.Float64("rateEvents", 30.0, "Nb events/sec")
+	rateEvents := flag.Float64("rateEvents", 100.0, "Nb events/sec")
 	warmupSeq := flag.String("warmup", "10s", "Time period for the warmup. e.g 30s")
 	sendEvts := flag.Int("sendEvts", 1000, "Nb events or -1 for infinite")
 	rcvEvts := flag.Int("rcvEvts", -1, "Nb events or -1 for infinite")

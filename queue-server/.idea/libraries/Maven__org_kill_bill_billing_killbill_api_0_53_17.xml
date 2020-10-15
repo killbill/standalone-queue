@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.kill-bill.billing:killbill-api:0.53.17">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/kill-bill/billing/killbill-api/0.53.17/killbill-api-0.53.17.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/org/kill-bill/billing/killbill-api/0.53.17/killbill-api-0.53.17-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/kill-bill/billing/killbill-api/0.53.17/killbill-api-0.53.17-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
