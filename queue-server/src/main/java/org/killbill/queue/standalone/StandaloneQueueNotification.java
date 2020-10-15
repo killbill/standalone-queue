@@ -17,6 +17,7 @@
 
 package org.killbill.queue.standalone;
 
+import io.grpc.stub.ServerCallStreamObserver;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.queue.rpc.gen.EventMsg;
@@ -25,6 +26,8 @@ import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueConfig;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueueService.NotificationQueueAlreadyExists;
+import org.killbill.queue.retry.RetryableHandler;
+import org.killbill.queue.retry.RetryableService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,25 +42,39 @@ public class StandaloneQueueNotification extends StandaloneQueueBase implements 
     // embs-svc:embs-queue -> {DefaultNotificationQueue@4575} "DefaultNotificationQueue{svcName='embs-svc', queueName='embs-queue'}"
     private final StandaloneNotificationQueueHandler notificationQueueHandler;
     private final NotificationQueueService notificationQueueService;
+    private final RetryableNotificationQueueService retryableQueueService;
+    private final RetryableHandler retryableHandler;
     private final NotificationQueue notificationQueue;
 
+    private static final class RetryableNotificationQueueService extends RetryableService {
+
+        public RetryableNotificationQueueService(final NotificationQueueService notificationQueueService) {
+            super(notificationQueueService);
+        }
+    }
 
     public StandaloneQueueNotification(final String jdbcConnection,
                                        final String dbUsername,
                                        final String dbPassword,
                                        final NotificationQueueConfig config) throws NotificationQueueAlreadyExists {
         super(config, jdbcConnection, dbUsername, dbPassword);
+
         this.notificationQueueHandler = new StandaloneNotificationQueueHandler();
         this.notificationQueueService = new DefaultNotificationQueueService(dbi, clock, (NotificationQueueConfig) queueConfig, metricRegistry);
+        this.retryableQueueService = new RetryableNotificationQueueService(notificationQueueService);
+
+        this.retryableHandler = new RetryableHandler(clock, retryableQueueService, notificationQueueHandler);
         this.notificationQueue = notificationQueueService.createNotificationQueue(SVC_NAME,
                 QUEUE_NAME,
-                notificationQueueHandler);
+                retryableHandler);
 
+        retryableQueueService.initialize(notificationQueue, notificationQueueHandler);
     }
 
     @Override
     public void start() {
         if (notificationQueue != null) {
+            retryableQueueService.start();
             notificationQueue.initQueue();
             notificationQueue.startQueue();
         }
@@ -68,6 +85,7 @@ public class StandaloneQueueNotification extends StandaloneQueueBase implements 
     public void stop() throws Exception {
         logger.info("Stopping test instance {}", QUEUE_NAME);
         if (notificationQueue != null) {
+            retryableQueueService.stop();
             notificationQueue.stopQueue();
             notificationQueueService.deleteNotificationQueue(SVC_NAME, QUEUE_NAME);
         }
@@ -82,7 +100,7 @@ public class StandaloneQueueNotification extends StandaloneQueueBase implements 
         notificationQueue.recordFutureNotification(effectiveDate, entry, userToken, request.getSearchKey1(), request.getSearchKey2());
     }
 
-    public void registerResponseObserver(final String owner, final io.grpc.stub.StreamObserver<org.killbill.billing.queue.rpc.gen.EventMsg> responseObserver) {
+    public void registerResponseObserver(final String owner, ServerCallStreamObserver<EventMsg> responseObserver) {
         notificationQueueHandler.registerResponseObserver(owner, responseObserver);
     }
 

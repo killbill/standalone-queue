@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/google/uuid"
 	qapi "github.com/killbill/standalone-queue/gen-go/api"
 	"github.com/sirupsen/logrus"
 
@@ -16,12 +17,14 @@ import (
 var logger = logrus.New()
 var customFormatter = new(logrus.TextFormatter)
 
+func doTest(warmup string, targetRate float64, sendEvts int, rcvEvts int, displayRate int, queue queue.Queue) {
 
-func doTest(warmup string, targetRate float64, nbEvents int, displayRate int, queue queue.Queue)  {
+	if rcvEvts == -1 {
+		// Default expected recv events should match the one we send.
+		rcvEvts = sendEvts
+	}
 
-
-	logger.Infof("[doTest] Starting test nbEvents=%d\n", nbEvents)
-
+	logger.Infof("[doTest] Starting test sendEvts=%d, rcvEvts=%d\n", sendEvts, rcvEvts)
 
 	bctx := context.Background()
 
@@ -30,7 +33,6 @@ func doTest(warmup string, targetRate float64, nbEvents int, displayRate int, qu
 
 	evtChan := make(chan *qapi.EventMsg, 1000)
 	queue.SubscribeEvents(bctx, evtChan)
-
 
 	defer func() {
 		logger.Infof("[doTest] defer stopping limiter \n")
@@ -42,17 +44,16 @@ func doTest(warmup string, targetRate float64, nbEvents int, displayRate int, qu
 
 	doneCh := make(chan interface{})
 	go func(evtCh <-chan *qapi.EventMsg, doneCh chan<- interface{}) {
-		// TODO
 		curRvc := 0
 		for evt := range evtCh {
 			curRvc += 1
 
-			if curRvc % displayRate == 0 {
+			if curRvc%displayRate == 0 {
 				logger.Infof("[doTest] Rcv curRvc=%d\n", curRvc)
 				logger.Infof("[doTest] Got event... %s\n", evt.EventJson)
 			}
 
-			if nbEvents > 0 && curRvc >= nbEvents {
+			if rcvEvts >= 0 && curRvc >= rcvEvts {
 				logger.Infof("[doTest] Rcv all events, curRvc=%d\n", curRvc)
 				break
 			}
@@ -62,37 +63,39 @@ func doTest(warmup string, targetRate float64, nbEvents int, displayRate int, qu
 	}(evtChan, doneCh)
 
 	curSent := 0
-	for true {
+	for sendEvts == -1 /* send events forever */||
+		curSent < sendEvts /* send events until we have reached sendEvts */ {
 		limiter.Wait(bctx)
-		queue.PostEvent(bctx,"{\"foo\":\"something\",\"bar\":\"fab44c43-7a92-41f8-8adf-9234ba7b5b8f\",\"date\":\"2020-10-13T02:30:45.966Z\",\"isActive\":true}")
+		uuid := uuid.New()
+		queue.PostEvent(bctx, "{\"foo\":\"something\",\"bar\":\""+uuid.String()+"\",\"date\":\"2020-10-13T02:30:45.966Z\",\"isActive\":true}")
 		curSent += 1
 
-		if curSent % displayRate == 0 {
+		if curSent%displayRate == 0 {
 			logger.Infof("[doTest] Sent curSent=%d\n", curSent)
 		}
 
-		if nbEvents > 0 && curSent >= nbEvents {
+		if sendEvts >= 0 && curSent >= sendEvts {
 			logger.Infof("[doTest] Sent all events, curSent=%d\n", curSent)
 			break
 		}
 	}
 
 	// Wait for all events to be received or a non recoverable error
-	<- doneCh
+	<-doneCh
 	logger.Infof("[doTest] Exiting...\n")
 }
-
 
 func main() {
 
 	serverAddr := flag.String("serverAddr", "127.0.0.1:9999", "Address of the server")
-	rateEvents := flag.Float64("rateEvents", 100.0, "Nb events/sec")
+	rateEvents := flag.Float64("rateEvents", 30.0, "Nb events/sec")
 	warmupSeq := flag.String("warmup", "10s", "Time period for the warmup. e.g 30s")
-	nbEvents := flag.Int("nbEvents", 1, "Nb events or -1 for infinite")
+	sendEvts := flag.Int("sendEvts", 1000, "Nb events or -1 for infinite")
+	rcvEvts := flag.Int("rcvEvts", -1, "Nb events or -1 for infinite")
 	displayRate := flag.Int("displayRate", 50, "Print a trace for displayRate msg send or received")
 
 	flag.Parse()
-	s := fmt.Sprintf("Starting test: server=%s, rateEvents=%f, warmup=%s, nbEvents=%d\n", *serverAddr, *rateEvents, *warmupSeq, *nbEvents)
+	s := fmt.Sprintf("Starting test: server=%s, rateEvents=%f, warmup=%s, sendEvts=%d, rcvEvts=%d\n", *serverAddr, *rateEvents, *warmupSeq, *sendEvts, *rcvEvts)
 	s += fmt.Sprintf("\n")
 	logger.Infof(s)
 
@@ -110,7 +113,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	doTest(*warmupSeq, *rateEvents, *nbEvents, *displayRate, api)
+	doTest(*warmupSeq, *rateEvents, *sendEvts, *rcvEvts, *displayRate, api)
 
 	logger.Info("main Exiting...\n")
 }
