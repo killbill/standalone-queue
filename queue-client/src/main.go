@@ -13,6 +13,7 @@ import (
 	"github.com/killbill/standalone-queue/src/queue"
 )
 
+
 // Our app will want to pass its own (configured) logger
 var logger = logrus.New()
 var customFormatter = new(logrus.TextFormatter)
@@ -82,6 +83,10 @@ func doTest(warmup string, targetRate float64, sendEvts int, rcvEvts int, displa
 
 	// Wait for all events to be received or a non recoverable error
 	<-doneCh
+	/*
+	logger.Infof("[doTest] Wait 20 sec...\n")
+	time.Sleep(time.Second * 20)
+	 */
 	logger.Infof("[doTest] Exiting...\n")
 }
 
@@ -104,10 +109,10 @@ func main() {
 	customFormatter.FullTimestamp = true
 	logger.SetFormatter(customFormatter)
 
-	owner := RandStringRunes(13)
+	clientId := RandStringRunes(13)
 	searchKey1 := 1
 	searchKey2 := 2
-	api, err := queue.NewQueue(*serverAddr, owner, int64(searchKey1), int64(searchKey2), logger)
+	api, err := queue.NewQueue(*serverAddr, clientId, int64(searchKey1), int64(searchKey2), logger)
 	if err != nil {
 		logger.Errorf("[doTest] Failed to create connection, exiting err=%s...\n", err)
 		os.Exit(1)
