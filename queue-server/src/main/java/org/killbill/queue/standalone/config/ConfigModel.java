@@ -54,6 +54,7 @@ public class ConfigModel {
     public static class App {
         private int port;
         private int nbThreads;
+        private boolean recycleTcpConn;
 
         public App() {
         }
@@ -63,6 +64,10 @@ public class ConfigModel {
         }
         public int getNbThreads() {
             return nbThreads;
+        }
+
+        public boolean getRecycleTcpConn() {
+            return recycleTcpConn;
         }
     }
 

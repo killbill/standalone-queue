@@ -70,10 +70,11 @@ public class QueueServer {
         }));
 
         logger.info(
-                "Starting queue server serverPort='{}', grpcThreads='{}'" +
+                "Starting queue server serverPort='{}', grpcThreads='{}', recycleTcpConn='{}' " +
                         " jdbcConn='{}', jdbcUser='{}', jdbcPwd='{}'",
                 config.getApp().getPort(),
                 config.getApp().getNbThreads(),
+                config.getApp().getRecycleTcpConn(),
                 config.getDatastore().getJdbcConn(),
                 config.getDatastore().getUser(),
                 config.getDatastore().getPassword());
@@ -84,7 +85,7 @@ public class QueueServer {
                 config.getNotificationQueueConfig());
         queue.start();
 
-        this.queueServer = new QueueGRPCServer(config.getApp().getPort(), config.getApp().getNbThreads(), queue);
+        this.queueServer = new QueueGRPCServer(config.getApp().getPort(), config.getApp().getNbThreads(), config.getApp().getRecycleTcpConn(), queue);
         queueServer.startAndWait();
     }
 
@@ -95,20 +96,27 @@ public class QueueServer {
 
         public QueueGRPCServer(final int port,
                                final int grpcThreads,
+                               final boolean tcpRecycleConn,
                                final StandaloneQueueNotification queue) {
 
             final NettyServerBuilder serverBuilder = (NettyServerBuilder) ServerBuilder.forPort(port);
-            this.server = serverBuilder
+            serverBuilder.addService(new QueueService(queue))
                     .keepAliveTime(10, TimeUnit.SECONDS) // Ping the client if it is idle for 10 seconds to ensure the connection is still active
                     .keepAliveTimeout(3, TimeUnit.SECONDS) // Wait 3 second for the ping ack before assuming the connection is dead
                     .permitKeepAliveWithoutCalls(true) // Allow keepalive pings when there's no gRPC calls
                     .permitKeepAliveTime(10, TimeUnit.SECONDS) // Allows client to send keepAlive pings every 10 sec
-                    //.maxConnectionIdle(15, TimeUnit.SECONDS)  // If a client is idle for 15 seconds, send a GOAWAY
-                    //.maxConnectionAgeGrace(3, TimeUnit.SECONDS) //  // Allow 3 seconds for pending RPCs to complete before forcibly closing connections
-                    //.maxConnectionAge(5, TimeUnit.SECONDS) // If any connection is alive for more than 5 seconds, send a GOAWAY
-                    .executor(Executors.newFixedThreadPool(grpcThreads))
-                    .addService(new QueueService(queue))
-                    .build();
+                    .executor(Executors.newFixedThreadPool(grpcThreads));
+
+            if (tcpRecycleConn) {
+                // Can be used to simulate closed tcp connection when also disabling the client ping keepAlive
+                serverBuilder.maxConnectionIdle(15, TimeUnit.SECONDS)  // If a client is idle for 15 seconds, send a GOAWAY
+                        .maxConnectionAgeGrace(3, TimeUnit.SECONDS) //  // Allow 3 seconds for pending RPCs to complete before forcibly closing connections
+                        .maxConnectionAge(5, TimeUnit.SECONDS); // If any connection is alive for more than 5 seconds, send a GOAWAY
+
+            }
+
+
+            this.server = serverBuilder.build();
         }
 
         public void startAndWait() throws IOException, InterruptedException {

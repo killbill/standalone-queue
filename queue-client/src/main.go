@@ -83,16 +83,13 @@ func doTest(warmup string, targetRate float64, sendEvts int, rcvEvts int, displa
 
 	// Wait for all events to be received or a non recoverable error
 	<-doneCh
-	/*
-	logger.Infof("[doTest] Wait 20 sec...\n")
-	time.Sleep(time.Second * 20)
-	 */
 	logger.Infof("[doTest] Exiting...\n")
 }
 
 func main() {
 
 	serverAddr := flag.String("serverAddr", "127.0.0.1:9999", "Address of the server")
+	keepAlive := flag.Bool("keepAlive", true, "Set the ping keepAlive")
 	rateEvents := flag.Float64("rateEvents", 100.0, "Nb events/sec")
 	warmupSeq := flag.String("warmup", "10s", "Time period for the warmup. e.g 30s")
 	sendEvts := flag.Int("sendEvts", 1000, "Nb events or -1 for infinite")
@@ -112,7 +109,7 @@ func main() {
 	clientId := RandStringRunes(13)
 	searchKey1 := 1
 	searchKey2 := 2
-	api, err := queue.NewQueue(*serverAddr, clientId, int64(searchKey1), int64(searchKey2), logger)
+	api, err := queue.NewQueue(*serverAddr, clientId, int64(searchKey1), int64(searchKey2), *keepAlive, logger)
 	if err != nil {
 		logger.Errorf("[doTest] Failed to create connection, exiting err=%s...\n", err)
 		os.Exit(1)

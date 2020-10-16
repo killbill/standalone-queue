@@ -2,6 +2,7 @@
 app:
   port: 9999
   nbThreads: 30
+  recycleTcpConn: false
 logging:
   level: debug
   format: text
