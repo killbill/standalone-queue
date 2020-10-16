@@ -19,23 +19,31 @@ package org.killbill.queue.standalone;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.killbill.notificationq.api.NotificationEvent;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class StandaloneNotificationEvent implements NotificationEvent {
 
     private String envelope;
+    private String clientId;
 
     // Required for jackson
     public StandaloneNotificationEvent() {
     }
 
     @JsonCreator
-    public StandaloneNotificationEvent(final String envelope) {
+    public StandaloneNotificationEvent(@JsonProperty("envelope") final String envelope,
+                                       @JsonProperty("clientId") final String clientId) {
         this.envelope = envelope;
+        this.clientId = clientId;
     }
 
     public String getEnvelope() {
         return envelope;
+    }
+
+    public String getClientId() {
+        return clientId;
     }
 }

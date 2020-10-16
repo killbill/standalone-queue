@@ -103,15 +103,12 @@ public class QueueServer {
                     .keepAliveTimeout(3, TimeUnit.SECONDS) // Wait 3 second for the ping ack before assuming the connection is dead
                     .permitKeepAliveWithoutCalls(true) // Allow keepalive pings when there's no gRPC calls
                     .permitKeepAliveTime(10, TimeUnit.SECONDS) // Allows client to send keepAlive pings every 10 sec
+                    //.maxConnectionIdle(15, TimeUnit.SECONDS)  // If a client is idle for 15 seconds, send a GOAWAY
+                    //.maxConnectionAgeGrace(3, TimeUnit.SECONDS) //  // Allow 3 seconds for pending RPCs to complete before forcibly closing connections
+                    //.maxConnectionAge(5, TimeUnit.SECONDS) // If any connection is alive for more than 5 seconds, send a GOAWAY
                     .executor(Executors.newFixedThreadPool(grpcThreads))
                     .addService(new QueueService(queue))
                     .build();
-
-            // TODO Try to reset server conn to see what happens
-            //.maxConnectionIdle(15, TimeUnit.SECONDS)  // If a client is idle for 15 seconds, send a GOAWAY
-            //.maxConnectionAge(30, TimeUnit.SECONDS) // If any connection is alive for more than 30 seconds, send a GOAWAY
-            //.maxConnectionAgeGrace(5, TimeUnit.SECONDS) //  // Allow 5 seconds for pending RPCs to complete before forcibly closing connections
-
         }
 
         public void startAndWait() throws IOException, InterruptedException {
@@ -152,12 +149,12 @@ public class QueueServer {
             // https://stackoverflow.com/questions/54588382/how-can-a-grpc-server-notice-that-the-client-has-cancelled-a-server-side-streami
             final ServerCallStreamObserver<org.killbill.billing.queue.rpc.gen.EventMsg> obs = ((ServerCallStreamObserver<org.killbill.billing.queue.rpc.gen.EventMsg>) responseObserver);
 
-            queue.registerResponseObserver(request.getOwner(), obs);
+            queue.registerResponseObserver(request.getClientId(), obs);
         }
 
         public void close(org.killbill.billing.queue.rpc.gen.CloseRequest request,
                           io.grpc.stub.StreamObserver<org.killbill.billing.queue.rpc.gen.CloseResponse> responseObserver) {
-            queue.unregisterResponseObserver(request.getOwner());
+            queue.unregisterResponseObserver(request.getClientId());
             responseObserver.onNext(CloseResponse.newBuilder().build());
             responseObserver.onCompleted();
         }

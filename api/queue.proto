@@ -18,8 +18,7 @@ service QueueApi {
 
 
 message EventMsg {
-	string owner = 1;
-    string queue_name = 2;
+	string client_id = 1;
     string event_json = 3;
     string user_token = 4;
     string future_user_token = 5;
@@ -33,14 +32,14 @@ message PostEventResponse {
 
 
 message CloseRequest {
-	string owner = 1;
+	string client_id = 1;
 }
 
 message CloseResponse {
 }
 
 message SubscriptionRequest {
-    string owner = 1;
+    string client_id = 1;
     int64 search_key2 = 2;
 }
 

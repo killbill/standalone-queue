@@ -16,7 +16,7 @@ private static final long serialVersionUID = 0L;
     super(builder);
   }
   private CloseRequest() {
-    owner_ = "";
+    clientId_ = "";
   }
 
   @java.lang.Override
@@ -52,7 +52,7 @@ private static final long serialVersionUID = 0L;
           case 10: {
             java.lang.String s = input.readStringRequireUtf8();
 
-            owner_ = s;
+            clientId_ = s;
             break;
           }
           default: {
@@ -87,38 +87,38 @@ private static final long serialVersionUID = 0L;
             org.killbill.billing.queue.rpc.gen.CloseRequest.class, org.killbill.billing.queue.rpc.gen.CloseRequest.Builder.class);
   }
 
-  public static final int OWNER_FIELD_NUMBER = 1;
-  private volatile java.lang.Object owner_;
+  public static final int CLIENT_ID_FIELD_NUMBER = 1;
+  private volatile java.lang.Object clientId_;
   /**
-   * <code>string owner = 1;</code>
-   * @return The owner.
+   * <code>string client_id = 1;</code>
+   * @return The clientId.
    */
   @java.lang.Override
-  public java.lang.String getOwner() {
-    java.lang.Object ref = owner_;
+  public java.lang.String getClientId() {
+    java.lang.Object ref = clientId_;
     if (ref instanceof java.lang.String) {
       return (java.lang.String) ref;
     } else {
       com.google.protobuf.ByteString bs = 
           (com.google.protobuf.ByteString) ref;
       java.lang.String s = bs.toStringUtf8();
-      owner_ = s;
+      clientId_ = s;
       return s;
     }
   }
   /**
-   * <code>string owner = 1;</code>
-   * @return The bytes for owner.
+   * <code>string client_id = 1;</code>
+   * @return The bytes for clientId.
    */
   @java.lang.Override
   public com.google.protobuf.ByteString
-      getOwnerBytes() {
-    java.lang.Object ref = owner_;
+      getClientIdBytes() {
+    java.lang.Object ref = clientId_;
     if (ref instanceof java.lang.String) {
       com.google.protobuf.ByteString b = 
           com.google.protobuf.ByteString.copyFromUtf8(
               (java.lang.String) ref);
-      owner_ = b;
+      clientId_ = b;
       return b;
     } else {
       return (com.google.protobuf.ByteString) ref;
@@ -139,8 +139,8 @@ private static final long serialVersionUID = 0L;
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output)
                       throws java.io.IOException {
-    if (!getOwnerBytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 1, owner_);
+    if (!getClientIdBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 1, clientId_);
     }
     unknownFields.writeTo(output);
   }
@@ -151,8 +151,8 @@ private static final long serialVersionUID = 0L;
     if (size != -1) return size;
 
     size = 0;
-    if (!getOwnerBytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, owner_);
+    if (!getClientIdBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, clientId_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -169,8 +169,8 @@ private static final long serialVersionUID = 0L;
     }
     org.killbill.billing.queue.rpc.gen.CloseRequest other = (org.killbill.billing.queue.rpc.gen.CloseRequest) obj;
 
-    if (!getOwner()
-        .equals(other.getOwner())) return false;
+    if (!getClientId()
+        .equals(other.getClientId())) return false;
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -182,8 +182,8 @@ private static final long serialVersionUID = 0L;
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
-    hash = (37 * hash) + OWNER_FIELD_NUMBER;
-    hash = (53 * hash) + getOwner().hashCode();
+    hash = (37 * hash) + CLIENT_ID_FIELD_NUMBER;
+    hash = (53 * hash) + getClientId().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -317,7 +317,7 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public Builder clear() {
       super.clear();
-      owner_ = "";
+      clientId_ = "";
 
       return this;
     }
@@ -345,7 +345,7 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public org.killbill.billing.queue.rpc.gen.CloseRequest buildPartial() {
       org.killbill.billing.queue.rpc.gen.CloseRequest result = new org.killbill.billing.queue.rpc.gen.CloseRequest(this);
-      result.owner_ = owner_;
+      result.clientId_ = clientId_;
       onBuilt();
       return result;
     }
@@ -394,8 +394,8 @@ private static final long serialVersionUID = 0L;
 
     public Builder mergeFrom(org.killbill.billing.queue.rpc.gen.CloseRequest other) {
       if (other == org.killbill.billing.queue.rpc.gen.CloseRequest.getDefaultInstance()) return this;
-      if (!other.getOwner().isEmpty()) {
-        owner_ = other.owner_;
+      if (!other.getClientId().isEmpty()) {
+        clientId_ = other.clientId_;
         onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
@@ -427,78 +427,78 @@ private static final long serialVersionUID = 0L;
       return this;
     }
 
-    private java.lang.Object owner_ = "";
+    private java.lang.Object clientId_ = "";
     /**
-     * <code>string owner = 1;</code>
-     * @return The owner.
+     * <code>string client_id = 1;</code>
+     * @return The clientId.
      */
-    public java.lang.String getOwner() {
-      java.lang.Object ref = owner_;
+    public java.lang.String getClientId() {
+      java.lang.Object ref = clientId_;
       if (!(ref instanceof java.lang.String)) {
         com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        owner_ = s;
+        clientId_ = s;
         return s;
       } else {
         return (java.lang.String) ref;
       }
     }
     /**
-     * <code>string owner = 1;</code>
-     * @return The bytes for owner.
+     * <code>string client_id = 1;</code>
+     * @return The bytes for clientId.
      */
     public com.google.protobuf.ByteString
-        getOwnerBytes() {
-      java.lang.Object ref = owner_;
+        getClientIdBytes() {
+      java.lang.Object ref = clientId_;
       if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
-        owner_ = b;
+        clientId_ = b;
         return b;
       } else {
         return (com.google.protobuf.ByteString) ref;
       }
     }
     /**
-     * <code>string owner = 1;</code>
-     * @param value The owner to set.
+     * <code>string client_id = 1;</code>
+     * @param value The clientId to set.
      * @return This builder for chaining.
      */
-    public Builder setOwner(
+    public Builder setClientId(
         java.lang.String value) {
       if (value == null) {
     throw new NullPointerException();
   }
   
-      owner_ = value;
+      clientId_ = value;
       onChanged();
       return this;
     }
     /**
-     * <code>string owner = 1;</code>
+     * <code>string client_id = 1;</code>
      * @return This builder for chaining.
      */
-    public Builder clearOwner() {
+    public Builder clearClientId() {
       
-      owner_ = getDefaultInstance().getOwner();
+      clientId_ = getDefaultInstance().getClientId();
       onChanged();
       return this;
     }
     /**
-     * <code>string owner = 1;</code>
-     * @param value The bytes for owner to set.
+     * <code>string client_id = 1;</code>
+     * @param value The bytes for clientId to set.
      * @return This builder for chaining.
      */
-    public Builder setOwnerBytes(
+    public Builder setClientIdBytes(
         com.google.protobuf.ByteString value) {
       if (value == null) {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
       
-      owner_ = value;
+      clientId_ = value;
       onChanged();
       return this;
     }

@@ -54,23 +54,23 @@ public final class Queue {
   static {
     java.lang.String[] descriptorData = {
       "\n\017api/queue.proto\022\005queue\032\037google/protobu" +
-      "f/timestamp.proto\"\316\001\n\010EventMsg\022\r\n\005owner\030" +
-      "\001 \001(\t\022\022\n\nqueue_name\030\002 \001(\t\022\022\n\nevent_json\030" +
-      "\003 \001(\t\022\022\n\nuser_token\030\004 \001(\t\022\031\n\021future_user" +
-      "_token\030\005 \001(\t\0222\n\016effective_date\030\006 \001(\0132\032.g" +
-      "oogle.protobuf.Timestamp\022\023\n\013search_key1\030" +
-      "\007 \001(\003\022\023\n\013search_key2\030\010 \001(\003\"\023\n\021PostEventR" +
-      "esponse\"\035\n\014CloseRequest\022\r\n\005owner\030\001 \001(\t\"\017" +
-      "\n\rCloseResponse\"9\n\023SubscriptionRequest\022\r" +
-      "\n\005owner\030\001 \001(\t\022\023\n\013search_key2\030\002 \001(\003\"\026\n\024Su" +
-      "bscriptionResponse2\270\001\n\010QueueApi\0226\n\tPostE" +
-      "vent\022\017.queue.EventMsg\032\030.queue.PostEventR" +
-      "esponse\022@\n\017SubscribeEvents\022\032.queue.Subsc" +
-      "riptionRequest\032\017.queue.EventMsg0\001\0222\n\005Clo" +
-      "se\022\023.queue.CloseRequest\032\024.queue.CloseRes" +
-      "ponseBR\n\"org.killbill.billing.queue.rpc." +
-      "genP\001Z*github.com/killbill/standalone-qu" +
-      "eue;queueb\006proto3"
+      "f/timestamp.proto\"\276\001\n\010EventMsg\022\021\n\tclient" +
+      "_id\030\001 \001(\t\022\022\n\nevent_json\030\003 \001(\t\022\022\n\nuser_to" +
+      "ken\030\004 \001(\t\022\031\n\021future_user_token\030\005 \001(\t\0222\n\016" +
+      "effective_date\030\006 \001(\0132\032.google.protobuf.T" +
+      "imestamp\022\023\n\013search_key1\030\007 \001(\003\022\023\n\013search_" +
+      "key2\030\010 \001(\003\"\023\n\021PostEventResponse\"!\n\014Close" +
+      "Request\022\021\n\tclient_id\030\001 \001(\t\"\017\n\rCloseRespo" +
+      "nse\"=\n\023SubscriptionRequest\022\021\n\tclient_id\030" +
+      "\001 \001(\t\022\023\n\013search_key2\030\002 \001(\003\"\026\n\024Subscripti" +
+      "onResponse2\270\001\n\010QueueApi\0226\n\tPostEvent\022\017.q" +
+      "ueue.EventMsg\032\030.queue.PostEventResponse\022" +
+      "@\n\017SubscribeEvents\022\032.queue.SubscriptionR" +
+      "equest\032\017.queue.EventMsg0\001\0222\n\005Close\022\023.que" +
+      "ue.CloseRequest\032\024.queue.CloseResponseBR\n" +
+      "\"org.killbill.billing.queue.rpc.genP\001Z*g" +
+      "ithub.com/killbill/standalone-queue;queu" +
+      "eb\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -82,7 +82,7 @@ public final class Queue {
     internal_static_queue_EventMsg_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_queue_EventMsg_descriptor,
-        new java.lang.String[] { "Owner", "QueueName", "EventJson", "UserToken", "FutureUserToken", "EffectiveDate", "SearchKey1", "SearchKey2", });
+        new java.lang.String[] { "ClientId", "EventJson", "UserToken", "FutureUserToken", "EffectiveDate", "SearchKey1", "SearchKey2", });
     internal_static_queue_PostEventResponse_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_queue_PostEventResponse_fieldAccessorTable = new
@@ -94,7 +94,7 @@ public final class Queue {
     internal_static_queue_CloseRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_queue_CloseRequest_descriptor,
-        new java.lang.String[] { "Owner", });
+        new java.lang.String[] { "ClientId", });
     internal_static_queue_CloseResponse_descriptor =
       getDescriptor().getMessageTypes().get(3);
     internal_static_queue_CloseResponse_fieldAccessorTable = new
@@ -106,7 +106,7 @@ public final class Queue {
     internal_static_queue_SubscriptionRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_queue_SubscriptionRequest_descriptor,
-        new java.lang.String[] { "Owner", "SearchKey2", });
+        new java.lang.String[] { "ClientId", "SearchKey2", });
     internal_static_queue_SubscriptionResponse_descriptor =
       getDescriptor().getMessageTypes().get(5);
     internal_static_queue_SubscriptionResponse_fieldAccessorTable = new

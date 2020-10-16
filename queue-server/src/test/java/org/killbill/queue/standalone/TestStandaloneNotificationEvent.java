@@ -29,7 +29,7 @@ public class TestStandaloneNotificationEvent {
         final String someJson = objectMapper.writeValueAsString(inputTest);
 
         // Create StandaloneNotificationEvent using string 'someJson'
-        final StandaloneNotificationEvent inputEvent = new StandaloneNotificationEvent(someJson);
+        final StandaloneNotificationEvent inputEvent = new StandaloneNotificationEvent(someJson, "12345");
 
         // Serialize StandaloneNotificationEvent (NotificationQ#insert)
         final String envJson = objectMapper.writeValueAsString(inputEvent);

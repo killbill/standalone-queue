@@ -37,9 +37,7 @@ public class StandaloneQueueNotification extends StandaloneQueueBase implements 
 
     private static final Logger logger = LoggerFactory.getLogger(StandaloneQueueNotification.class);
 
-    // TODO config
     private static final String SVC_NAME = "embs-svc";
-    // embs-svc:embs-queue -> {DefaultNotificationQueue@4575} "DefaultNotificationQueue{svcName='embs-svc', queueName='embs-queue'}"
     private final StandaloneNotificationQueueHandler notificationQueueHandler;
     private final NotificationQueueService notificationQueueService;
     private final RetryableNotificationQueueService retryableQueueService;
@@ -94,18 +92,18 @@ public class StandaloneQueueNotification extends StandaloneQueueBase implements 
 
     @Override
     public void insertEntryIntoQueue(final EventMsg request) throws Exception {
-        final StandaloneNotificationEvent entry = new StandaloneNotificationEvent(request.getEventJson());
+        final StandaloneNotificationEvent entry = new StandaloneNotificationEvent(request.getEventJson(), request.getClientId());
         final UUID userToken = UUID.fromString(request.getUserToken());
         final DateTime effectiveDate = new DateTime(request.getEffectiveDate().getSeconds() * 1000L, DateTimeZone.UTC);
         notificationQueue.recordFutureNotification(effectiveDate, entry, userToken, request.getSearchKey1(), request.getSearchKey2());
     }
 
-    public void registerResponseObserver(final String owner, ServerCallStreamObserver<EventMsg> responseObserver) {
-        notificationQueueHandler.registerResponseObserver(owner, responseObserver);
+    public void registerResponseObserver(final String clientId, ServerCallStreamObserver<EventMsg> responseObserver) {
+        notificationQueueHandler.registerResponseObserver(clientId, responseObserver);
     }
 
-    public void unregisterResponseObserver(final String owner) {
-        notificationQueueHandler.unregisterResponseObserver(owner);
+    public void unregisterResponseObserver(final String clientId) {
+        notificationQueueHandler.unregisterResponseObserver(clientId);
     }
 
 }

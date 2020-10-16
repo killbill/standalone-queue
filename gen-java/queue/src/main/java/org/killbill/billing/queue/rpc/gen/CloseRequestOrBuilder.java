@@ -8,14 +8,14 @@ public interface CloseRequestOrBuilder extends
     com.google.protobuf.MessageOrBuilder {
 
   /**
-   * <code>string owner = 1;</code>
-   * @return The owner.
+   * <code>string client_id = 1;</code>
+   * @return The clientId.
    */
-  java.lang.String getOwner();
+  java.lang.String getClientId();
   /**
-   * <code>string owner = 1;</code>
-   * @return The bytes for owner.
+   * <code>string client_id = 1;</code>
+   * @return The bytes for clientId.
    */
   com.google.protobuf.ByteString
-      getOwnerBytes();
+      getClientIdBytes();
 }

@@ -130,12 +130,17 @@ public class StandaloneNotificationQueueHandler implements NotificationQueueHand
     @Override
     public void handleReadyNotification(final NotificationEvent inputEvent, final DateTime eventDateTime, final UUID userToken, final Long searchKey1, final Long searchKey2) {
 
-        final String inputEventStr = deserializeEvent(inputEvent);
-        final EventMsg.Builder msgBuilder = EventMsg.newBuilder();
+        if (!(inputEvent instanceof StandaloneNotificationEvent)) {
+            logger.error("Unexpected type of event class={}, event={}",
+                    (inputEvent != null ? inputEvent.getClass() : null), inputEvent);
+            // TODO We could retry but if we cannot deserialize, this will not help...
+            return ;
+        }
 
-        // TODO
-        //msgBuilder.setQueueName(StandaloneQueueBase.QUEUE_NAME);
-        msgBuilder.setEventJson(inputEventStr);
+        final StandaloneNotificationEvent inputEvent2 = (StandaloneNotificationEvent) inputEvent;
+        final EventMsg.Builder msgBuilder = EventMsg.newBuilder();
+        msgBuilder.setClientId(inputEvent2.getClientId());
+        msgBuilder.setEventJson(inputEvent2.getEnvelope());
         msgBuilder.setUserToken(userToken.toString());
         msgBuilder.setSearchKey1(searchKey1);
         msgBuilder.setSearchKey2(searchKey2);
@@ -190,17 +195,4 @@ public class StandaloneNotificationQueueHandler implements NotificationQueueHand
             e.printStackTrace();
         }
     }
-
-
-    static String deserializeEvent(final NotificationEvent inputEvent) {
-        if (!(inputEvent instanceof StandaloneNotificationEvent)) {
-            logger.error("Unexpected type of event class={}, event={}",
-                    (inputEvent != null ? inputEvent.getClass() : null), inputEvent);
-            return null;
-        }
-
-        final StandaloneNotificationEvent event = (StandaloneNotificationEvent) inputEvent;
-        return event.getEnvelope();
-    }
-
 }
