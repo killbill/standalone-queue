@@ -30,6 +30,14 @@ import java.util.stream.Collectors;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class ConfigModel {
 
+    static final String PROP_DATASTORE_PORT = "QUEUE_DATASTORE_PORT";
+    static final String PROP_DATASTORE_DATABASE = "QUEUE_DATASTORE_DATABASE";
+    static final String PROP_DATASTORE_HOST = "QUEUE_DATASTORE_HOST";
+    static final String PROP_DATASTORE_USER = "QUEUE_DATASTORE_USER";
+    static final String PROP_DATASTORE_PASSWORD = "QUEUE_DATASTORE_PASSWORD";
+
+    static final String PROP_APP_PORT = "QUEUE_APP_PORT";
+
     private static final String NOTIFICATION_PREFIX = "org.killbill.notificationq.main.";
 
     private App app;
@@ -43,7 +51,7 @@ public class ConfigModel {
     public void initialize() {
         final Map<String, String> newNotification =
                 notification.entrySet().stream().collect(Collectors.toMap(
-                        entry ->  NOTIFICATION_PREFIX + entry.getKey(),
+                        entry -> NOTIFICATION_PREFIX + entry.getKey(),
                         entry -> entry.getValue())
                 );
         this.notification = newNotification;
@@ -69,9 +77,9 @@ public class ConfigModel {
     }
 
     public static class App {
-        private int port;
-        private int nbThreads;
-        private boolean recycleTcpConn;
+        private Integer port;
+        private Integer nbThreads;
+        private Boolean recycleTcpConn;
 
         public App() {
         }
@@ -79,6 +87,17 @@ public class ConfigModel {
         public int getPort() {
             return port;
         }
+
+        public void setPort(final Integer port) {
+            final Integer sysPort = fromSystemProperty(PROP_APP_PORT, Integer.valueOf(0));
+            if (sysPort != null) {
+                this.port = sysPort;
+            } else {
+                this.port = port;
+            }
+        }
+
+
         public int getNbThreads() {
             return nbThreads;
         }
@@ -95,9 +114,11 @@ public class ConfigModel {
 
         public Logging() {
         }
+
         public String getLevel() {
             return level;
         }
+
         public String getFormat() {
             return format;
         }
@@ -106,33 +127,96 @@ public class ConfigModel {
     public static class Datastore {
         private String database;
         private String host;
-        private int port;
+        private Integer port;
         private String user;
         private String password;
 
         public Datastore() {
         }
+
         public String getDatabase() {
             return database;
         }
+
+        public void setDatabase(final String database) {
+            final String sysDatabase = fromSystemProperty(PROP_DATASTORE_DATABASE, "");
+            if (sysDatabase != null) {
+                this.database = sysDatabase;
+            } else {
+                this.database = database;
+            }
+        }
+
+        public void setHost(final String host) {
+            final String sysHost = fromSystemProperty(PROP_DATASTORE_HOST, "");
+            if (sysHost != null) {
+                this.host = sysHost;
+            } else {
+                this.host = host;
+            }
+        }
+
+        public void setUser(final String user) {
+            final String sysUser = fromSystemProperty(PROP_DATASTORE_USER, "");
+            if (sysUser != null) {
+                this.user = sysUser;
+            } else {
+                this.user = user;
+            }
+        }
+
+        public void setPassword(final String password) {
+            final String sysPwd = fromSystemProperty(PROP_DATASTORE_PASSWORD, "");
+            if (sysPwd != null) {
+                this.password = sysPwd;
+            } else {
+                this.password = password;
+            }
+        }
+
         public String getHost() {
             return host;
         }
-        public int getPort() {
+
+        public Integer getPort() {
             return port;
         }
+
+        public void setPort(final Integer port) {
+            final Integer sysPort = fromSystemProperty(PROP_DATASTORE_PORT, Integer.valueOf(0));
+            if (sysPort != null) {
+                this.port = sysPort;
+            } else {
+                this.port = port;
+            }
+        }
+
         public String getUser() {
             return user;
         }
+
         public String getPassword() {
             return password;
         }
-
 
         public String getJdbcConn() {
             return String.format("jdbc:postgresql://%s:%d/%s", host, port, database);
         }
 
+    }
+
+
+    private static <T> T fromSystemProperty(final String prop, final T dummy)  {
+        final String value = System.getProperty(prop);
+        if (value == null) {
+            return null;
+        }
+        if (dummy instanceof Integer) {
+            return (T) Integer.valueOf(value);
+        } else if (dummy instanceof String) {
+            return (T) value;
+        }
+        throw new IllegalStateException(String.format("Unexpected property type %s", dummy.getClass()));
     }
 
 }

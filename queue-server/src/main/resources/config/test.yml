@@ -16,8 +16,8 @@ notification:
   queue.mode: POLLING
   claimed: 30
   claim.time: 5m
-  sleep: 100
-  notification.nbThreads: 2
+  sleep: 3000
+  notification.nbThreads: 10
   lifecycle.dispatch.nbThreads: 1
   lifecycle.complete.nbThreads: 2
   queue.capacity: 1000
@@ -25,5 +25,5 @@ notification:
   maxReDispatchCount: 10
   reapThreshold: 10m
   reapSchedule: 3m
-  tableName: notifications
-  historyTableName: notifications_history
+  tableName: standalone_notifications
+  historyTableName: standalone_notifications_history
