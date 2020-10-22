@@ -27,6 +27,8 @@ import static org.testng.Assert.assertEquals;
 
 public class TestConfig {
 
+    private static final String TEST_RESOURCE = "config/test.yml";
+
     @BeforeTest
     public void beforetest() {
         System.clearProperty(ConfigModel.PROP_DATASTORE_PORT);
@@ -41,7 +43,7 @@ public class TestConfig {
 
         //System.setProperty("org.killbill.queue.standalone.config", "file:///tmp/test.yml");
 
-        final Config conf = new Config();
+        final Config conf = new Config(TEST_RESOURCE);
         final ConfigModel config = conf.getConfig();
 
         assertEquals(config.getApp().getNbThreads(), 30);
@@ -78,7 +80,7 @@ public class TestConfig {
         System.setProperty(ConfigModel.PROP_DATASTORE_HOST, "host");
 
 
-        final Config conf = new Config();
+        final Config conf = new Config(TEST_RESOURCE);
         final ConfigModel config = conf.getConfig();
 
         assertEquals(config.getApp().getNbThreads(), 30);

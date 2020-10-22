@@ -29,15 +29,19 @@ import java.net.URL;
 public class Config {
 
     private static final String PROPERTY_FILE = "org.killbill.queue.standalone.config";
-    private static final String TEST_RESOURCE = "config/test.yml";
+    private static final String LOCAL_RESOURCE = "config/local.yml";
 
     private final ConfigModel config;
 
     public Config() throws IOException, URISyntaxException {
+        this(LOCAL_RESOURCE);
+    }
+
+    public Config(final String configFile) throws IOException, URISyntaxException {
         final ObjectMapper om = new ObjectMapper(new YAMLFactory());
         final URL url = loadPropertiesFromFile();
         if (url == null) {
-            final File resourceFile = getConfigFromResource();
+            final File resourceFile = getConfigFromResource(configFile);
             config = om.readValue(resourceFile, ConfigModel.class);
         } else {
             config = om.readValue(url, ConfigModel.class);
@@ -49,9 +53,9 @@ public class Config {
         return config;
     }
 
-    private File getConfigFromResource() {
+    private File getConfigFromResource(final String configFile) {
         final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        final File file = new File(classLoader.getResource(TEST_RESOURCE).getFile());
+        final File file = new File(classLoader.getResource(configFile).getFile());
         return file;
     }
 

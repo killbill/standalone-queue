@@ -1,0 +1,29 @@
+---
+app:
+  port: 9999
+  nbThreads: 30
+  recycleTcpConn: false
+logging:
+  level: debug
+  format: text
+datastore:
+  database: standalalone_test
+  host: localhost
+  port: 5432
+  user: postgres
+  password: postgres
+notification:
+  queue.mode: POLLING
+  claimed: 30
+  claim.time: 5m
+  sleep: 100
+  notification.nbThreads: 3
+  lifecycle.dispatch.nbThreads: 1
+  lifecycle.complete.nbThreads: 2
+  queue.capacity: 1000
+  max.failure.retry: 3
+  maxReDispatchCount: 10
+  reapThreshold: 10m
+  reapSchedule: 3m
+  tableName: notifications
+  historyTableName: notifications_history
