@@ -26,6 +26,7 @@
     <properties>
         <check.skip-rat>true</check.skip-rat>
         <check.skip-spotbugs>true</check.skip-spotbugs>
+        <maven.javadoc.skip>true</maven.javadoc.skip>
         <!-- 1.32.1 is out -->
         <grpc.version>1.30.0</grpc.version>
         <release.release-profiles />
