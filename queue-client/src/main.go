@@ -119,19 +119,22 @@ func doTest(warmup string, targetRate float64, sendEvts int, rcvEvts int, displa
 
 func main() {
 
-	serverAddr := flag.String("serverAddr", "127.0.0.1:9999", "Address of the server")
-	keepAlive := flag.Bool("keepAlive", true, "Set the ping keepAlive")
+	// Test specific
 	rateEvents := flag.Float64("rateEvents", 100.0, "Nb events/sec")
 	warmupSeq := flag.String("warmup", "10s", "Time period for the warmup. e.g 30s")
 	sendEvts := flag.Int("sendEvts", 1000, "Nb events or -1 for infinite")
 	rcvEvts := flag.Int("rcvEvts", -1, "Nb events or -1 for infinite")
-	displayRate := flag.Int("displayRate", 100, "Print a trace for displayRate msg send or received")
 	testLoops := flag.Int("testLoops", 1, "How many test iteration loops")
 	sleepLoops := flag.String("sleepLoop", "1h", "How many test iteration loops")
+	displayRate := flag.Int("displayRate", 100, "Print a trace for displayRate msg send or received")
+	// Queue params
+	serverAddr := flag.String("serverAddr", "127.0.0.1:9999", "Address of the server")
+	connRetries := flag.Int("connRetries", 10, "How many times to retry to connect (with exp backoff wait)")
+	keepAlive := flag.Bool("keepAlive", true, "Set the ping keepAlive")
 
 	flag.Parse()
-	s := fmt.Sprintf("Starting test: server=%s, rateEvents=%f, warmup=%s, sendEvts=%d, rcvEvts=%d, testLoops=%d, sleepLoops=%s\n",
-		*serverAddr, *rateEvents, *warmupSeq, *sendEvts, *rcvEvts, *testLoops, *sleepLoops)
+	s := fmt.Sprintf("Starting test: server=%s, connRetries=%d, rateEvents=%f, warmup=%s, sendEvts=%d, rcvEvts=%d, testLoops=%d, sleepLoops=%s\n",
+		*serverAddr, *connRetries, *rateEvents, *warmupSeq, *sendEvts, *rcvEvts, *testLoops, *sleepLoops)
 	s += fmt.Sprintf("\n")
 	logger.Infof(s)
 
@@ -143,7 +146,7 @@ func main() {
 	clientId := RandStringRunes(13)
 	searchKey1 := 1
 	searchKey2 := 2
-	api, err := queue.NewQueue(*serverAddr, clientId, int64(searchKey1), int64(searchKey2), *keepAlive, logger)
+	api, err := queue.NewQueue(*serverAddr, *connRetries, clientId, int64(searchKey1), int64(searchKey2), *keepAlive, logger)
 	if err != nil {
 		logger.Errorf("[doTest] Failed to create connection, exiting err=%s...\n", err)
 		os.Exit(1)

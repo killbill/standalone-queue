@@ -52,7 +52,7 @@ type Queue interface {
 	Close(ctx context.Context)
 }
 
-func NewQueue(serverAddr string, clientId string, searchKey1 int64, searchKey2 int64, keepAlive bool, logger *logrus.Logger) (Queue, error) {
+func NewQueue(serverAddr string, connRetries int, clientId string, searchKey1 int64, searchKey2 int64, keepAlive bool, logger *logrus.Logger) (Queue, error) {
 
 	if !keepAlive {
 		logger.WithFields(logrus.Fields{}).Warn("Queue created with keepAlive=false")
@@ -64,6 +64,7 @@ func NewQueue(serverAddr string, clientId string, searchKey1 int64, searchKey2 i
 		searchKey1: searchKey1,
 		searchKey2: searchKey2,
 		keepAlive: keepAlive,
+		connRetries: connRetries,
 		state:      Closed,
 		log:        logger,
 	}
@@ -85,6 +86,7 @@ type queue struct {
 	log *logrus.Logger
 	// This is should be set to true unless in test mode
 	keepAlive bool
+	connRetries int
 	// Connection/api management
 	mux   sync.Mutex
 	state State
@@ -120,8 +122,7 @@ func (q *queue) SubscribeEvents(_ context.Context, evtCh chan<- *qapi.EventMsg) 
 		return nil
 	}
 
-	const maxAttempts = 1
-	stream, err := q.subscribeWithAttempts(maxAttempts)
+	stream, err := q.subscribeWithAttempts(q.connRetries)
 	if err != nil {
 		// We don't try to automatically re-subscribe, we let the client decide and handle retries if necessary
 		return err
@@ -139,7 +140,7 @@ func (q *queue) subscribeWithAttempts(maxAttempts int) (qapi.QueueApi_SubscribeE
 
 	q.log.WithFields(logrus.Fields{"state": q.state}).Info("Queue::subscribeWithAttempts: enter")
 
-	var delaySec time.Duration = 1
+	var delaySec time.Duration = time.Second
 	var stream qapi.QueueApi_SubscribeEventsClient
 	var err error
 
@@ -164,7 +165,7 @@ func (q *queue) subscribeWithAttempts(maxAttempts int) (qapi.QueueApi_SubscribeE
 
 		q.log.WithFields(logrus.Fields{"err": err, "state": q.state}).Errorf("Queue::subscribeWithAttempts: failed to re-subscribe to events, attempts=[%d/%d] sleeping %d sec and retry",
 			curAttempts, maxAttempts, delaySec)
-		time.Sleep(delaySec * time.Second)
+		time.Sleep(delaySec)
 		delaySec = delaySec * 2
 	}
 	return stream, nil
