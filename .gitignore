@@ -231,4 +231,4 @@ util/sql
 
 
 gen-java/queue/target
-
+queue-client/queue-client

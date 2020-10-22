@@ -85,13 +85,17 @@ func (gl *GradLimiter) Stop() {
 	gl.ticker.Stop()
 }
 
+func parseDuration(duration string) time.Duration {
+	w, err := time.ParseDuration(duration)
+	if err != nil {
+		log.Fatalf("Failed to parse duration sequence: err = %s", err)
+	}
+	return w
+}
+
 func NewGradLimiter(warmup string, targetRate float64, unused WarmupStrategy) *GradLimiter {
 
-	w, err := time.ParseDuration(warmup)
-	if err != nil {
-		log.Fatalf("Failed to parse warmup sequence: err = %s", err)
-	}
-
+	w := parseDuration(warmup)
 	if w < MinWarmup {
 		log.Fatalf("Minimum warmup allowed is %s", MinWarmup.String())
 	}

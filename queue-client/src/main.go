@@ -22,6 +22,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/google/uuid"
 	qapi "github.com/killbill/standalone-queue/gen-go/api"
@@ -30,12 +31,11 @@ import (
 	"github.com/killbill/standalone-queue/src/queue"
 )
 
-
 // Our app will want to pass its own (configured) logger
 var logger = logrus.New()
 var customFormatter = new(logrus.TextFormatter)
 
-func doTest(warmup string, targetRate float64, sendEvts int, rcvEvts int, displayRate int, queue queue.Queue) {
+func doTest(warmup string, targetRate float64, sendEvts int, rcvEvts int, displayRate int, testLoops int , sleepLoops string, queue queue.Queue) {
 
 	if rcvEvts == -1 {
 		// Default expected recv events should match the one we send.
@@ -60,48 +60,62 @@ func doTest(warmup string, targetRate float64, sendEvts int, rcvEvts int, displa
 		logger.Infof("[doTest] defer done \n")
 	}()
 
-	doneCh := make(chan interface{})
-	go func(evtCh <-chan *qapi.EventMsg, doneCh chan<- interface{}) {
-		curRvc := 0
-		for evt := range evtCh {
-			curRvc += 1
 
-			if curRvc%displayRate == 0 {
-				logger.Infof("[doTest] Rcv curRvc=%d\n", curRvc)
-				logger.Infof("[doTest] Got event... %s\n", evt.EventJson)
+	sleep := parseDuration(sleepLoops)
+	curIteration := 0
+	for curIteration < testLoops {
+
+		doneCh := make(chan interface{})
+		go func(evtCh <-chan *qapi.EventMsg, doneCh chan<- interface{}) {
+			curRvc := 0
+			for evt := range evtCh {
+				curRvc += 1
+
+				if curRvc%displayRate == 0 {
+					logger.Infof("[doTest] Rcv curRvc=%d\n", curRvc)
+					logger.Infof("[doTest] Got event... %s\n", evt.EventJson)
+				}
+
+				if rcvEvts >= 0 && curRvc >= rcvEvts {
+					logger.Infof("[doTest] Rcv all events, curRvc=%d\n", curRvc)
+					break
+				}
+			}
+			logger.Infof("[doTest] Rcv %d events...\n", curRvc)
+			doneCh <- struct{}{}
+		}(evtChan, doneCh)
+
+		curSent := 0
+		for sendEvts == -1 /* send events forever */ ||
+			curSent < sendEvts /* send events until we have reached sendEvts */ {
+			limiter.Wait(bctx)
+			uuid := uuid.New()
+			queue.PostEvent(bctx, "{\"foo\":\"something\",\"bar\":\""+uuid.String()+"\",\"date\":\"2020-10-13T02:30:45.966Z\",\"isActive\":true}")
+			curSent += 1
+
+			if curSent%displayRate == 0 {
+				logger.Infof("[doTest] Sent curSent=%d\n", curSent)
 			}
 
-			if rcvEvts >= 0 && curRvc >= rcvEvts {
-				logger.Infof("[doTest] Rcv all events, curRvc=%d\n", curRvc)
+			if sendEvts >= 0 && curSent >= sendEvts {
+				logger.Infof("[doTest] Sent all events, curSent=%d\n", curSent)
 				break
 			}
 		}
-		logger.Infof("[doTest] Rcv %d events...\n", curRvc)
-		doneCh <- struct{}{}
-	}(evtChan, doneCh)
 
-	curSent := 0
-	for sendEvts == -1 /* send events forever */||
-		curSent < sendEvts /* send events until we have reached sendEvts */ {
-		limiter.Wait(bctx)
-		uuid := uuid.New()
-		queue.PostEvent(bctx, "{\"foo\":\"something\",\"bar\":\""+uuid.String()+"\",\"date\":\"2020-10-13T02:30:45.966Z\",\"isActive\":true}")
-		curSent += 1
+		// Wait for all events to be received or a non recoverable error
+		<-doneCh
 
-		if curSent%displayRate == 0 {
-			logger.Infof("[doTest] Sent curSent=%d\n", curSent)
-		}
-
-		if sendEvts >= 0 && curSent >= sendEvts {
-			logger.Infof("[doTest] Sent all events, curSent=%d\n", curSent)
-			break
+		curIteration++
+		logger.Infof("[doTest] Done with iteration %d, sleep %s\n", curIteration, sleepLoops)
+		if curIteration < testLoops {
+			time.Sleep(sleep)
 		}
 	}
 
-	// Wait for all events to be received or a non recoverable error
-	<-doneCh
 	logger.Infof("[doTest] Exiting...\n")
 }
+
 
 func main() {
 
@@ -111,10 +125,13 @@ func main() {
 	warmupSeq := flag.String("warmup", "10s", "Time period for the warmup. e.g 30s")
 	sendEvts := flag.Int("sendEvts", 1000, "Nb events or -1 for infinite")
 	rcvEvts := flag.Int("rcvEvts", -1, "Nb events or -1 for infinite")
-	displayRate := flag.Int("displayRate", 50, "Print a trace for displayRate msg send or received")
+	displayRate := flag.Int("displayRate", 100, "Print a trace for displayRate msg send or received")
+	testLoops := flag.Int("testLoops", 1, "How many test iteration loops")
+	sleepLoops := flag.String("sleepLoop", "1h", "How many test iteration loops")
 
 	flag.Parse()
-	s := fmt.Sprintf("Starting test: server=%s, rateEvents=%f, warmup=%s, sendEvts=%d, rcvEvts=%d\n", *serverAddr, *rateEvents, *warmupSeq, *sendEvts, *rcvEvts)
+	s := fmt.Sprintf("Starting test: server=%s, rateEvents=%f, warmup=%s, sendEvts=%d, rcvEvts=%d, testLoops=%d, sleepLoops=%s\n",
+		*serverAddr, *rateEvents, *warmupSeq, *sendEvts, *rcvEvts, *testLoops, *sleepLoops)
 	s += fmt.Sprintf("\n")
 	logger.Infof(s)
 
@@ -132,7 +149,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	doTest(*warmupSeq, *rateEvents, *sendEvts, *rcvEvts, *displayRate, api)
+	doTest(*warmupSeq, *rateEvents, *sendEvts, *rcvEvts, *displayRate, *testLoops, *sleepLoops, api)
 
 	logger.Info("main Exiting...\n")
 }

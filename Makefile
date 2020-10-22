@@ -27,6 +27,10 @@ build_gen_java: ## Build Java api gen files
 	@echo "Compiling and installing (.m2) java files"
 	@cd gen-java/queue; mvn clean install
 
+build_client: build_gen_go ## Building queue client
+	@echo "Building queue client"
+	@cd queue-client; (cd src ; go build -o ../queue-client)
+
 build_server: build_gen_java ## Building queue server
 	@echo "Building queue server"
 	@cd queue-server; mvn install
@@ -40,13 +44,17 @@ clean_gen_java: ## Cleanup Java api gen files
 	rm -Rf "gen-java/queue/src/main/java/*";
 	rm -Rf "gen-java/queue/target";
 
-clean_server: ## Building queue server
+clean_client: ## Cleaning queue client
+	@echo "Building queue client"
+	@cd queue-client; rm -f queue-client
+
+clean_server: ## Cleaning queue server
 	@echo "Building queue server"
 	@cd queue-server; mvn clean
 
-clean: clean_gen_go clean_gen_java  clean_server ## Cleanup all api gens & server
+clean: clean_gen_go clean_gen_java  clean_client clean_server ## Cleanup all api gens & server
 
 all: build_gen_go build_gen_java build_server ## Build all api gens & server
 
-.PHONY: all build_gen_go build_gen_java build_server clean clean_gen_go clean_gen_java clean_server
+.PHONY: all build_gen_go build_gen_java build_client build_server clean clean_gen_go clean_gen_java clean_client clean_server
                
