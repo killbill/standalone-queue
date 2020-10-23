@@ -23,7 +23,7 @@ gRPC seems to correctly handle long connections, but of course connections can s
 
 ### TCP Connections
 
-Both the client and the server are configured to do their best to keep the underyling transport (tcp connection) alive, by sending ping keepAlive.
+Both the client and the server are configured to do their best to keep the underyling transport (tcp connection) alive, by sending [ping keepAlive](https://github.com/grpc/grpc/blob/master/doc/keepalive.md).
 Note that we don't rely on TCP KeepAlive (which is also configured with a much greater period) as those are not always guaranteed to correctly
 behave from end-end (e.g proxys in the middle, ...).
 
@@ -33,6 +33,7 @@ match (otherwise we observe some pretty crazy behavior).
 In normal scenario, we observe one TCP handshake and some periodic ping keepAlive (in addition to regular traffic, if any).
 
 Once correctly configured, the transport is mostly handled by `gRPC` underlying layer, but tcp connections can (and will) still break so we need application client and server additional logic.
+
 
 ## Client State Machine
 
