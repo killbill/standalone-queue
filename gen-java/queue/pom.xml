@@ -8,7 +8,7 @@
     </parent>
     <groupId>org.kill-bill.billing.rpc</groupId>
     <artifactId>queue</artifactId>
-    <version>0.1.1-SNAPSHOT</version>
+    <version>0.1.3-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>queue gRPC apis</name>
     <description>queue gRPC apis</description>
@@ -28,6 +28,7 @@
         <check.skip-spotbugs>true</check.skip-spotbugs>
         <!-- 1.32.1 is out -->
         <grpc.version>1.30.0</grpc.version>
+        <maven.javadoc.skip>true</maven.javadoc.skip>
         <release.release-profiles />
     </properties>
     <dependencies>
