@@ -273,6 +273,7 @@ func (q *queue) createTransport() error {
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithInsecure())
 	if q.keepAlive {
+		// See https://github.com/grpc/grpc-go/tree/master/examples/features/keepalive
 		var kacp = keepalive.ClientParameters{
 			Time:                10 * time.Second, // send pings every 10 seconds if there is no activity
 			Timeout:             3 * time.Second,  // wait 3 second for ping ack before considering the connection dead
