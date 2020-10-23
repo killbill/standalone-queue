@@ -28,7 +28,6 @@
         <check.skip-spotbugs>true</check.skip-spotbugs>
         <!-- 1.32.1 is out -->
         <grpc.version>1.30.0</grpc.version>
-        <maven.javadoc.skip>true</maven.javadoc.skip>
         <release.release-profiles />
     </properties>
     <dependencies>

@@ -6,6 +6,6 @@ public class TestQueueDummy {
 
     @Test
     public void testDummy() {
-        
+
     }
 }
