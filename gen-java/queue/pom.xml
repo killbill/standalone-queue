@@ -8,7 +8,7 @@
     </parent>
     <groupId>org.kill-bill.billing.rpc</groupId>
     <artifactId>queue</artifactId>
-    <version>0.1.6</version>
+    <version>0.1.7-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>queue gRPC apis</name>
     <description>queue gRPC apis</description>
@@ -16,7 +16,7 @@
     <scm>
         <connection>scm:git:git://github.com/killbill/standalone-queue.git</connection>
         <developerConnection>scm:git:git@github.com:killbill/standalone-queue.git</developerConnection>
-        <tag>queue-0.1.6</tag>
+        <tag>HEAD</tag>
         <url>http://github.com/killbill/standalone-queue/tree/master</url>
     </scm>
     <issueManagement>
