@@ -48,25 +48,29 @@ var _ Queue = &queue{}
 
 type Queue interface {
 	PostEvent(ctx context.Context, json string) error
-	SubscribeEvents(ctx context.Context, evtCh chan<- *qapi.EventMsg) error
+	SubscribeEvents(ctx context.Context, handlerFn func(ev *qapi.EventMsg), closeFn func()) error
 	Close(ctx context.Context)
 }
 
-func NewQueue(serverAddr string, connRetries int, clientId string, searchKey1 int64, searchKey2 int64, keepAlive bool, logger *logrus.Logger) (Queue, error) {
+func NewQueue(serverAddr string, apiAttempts int, clientId string, searchKey1 int64, searchKey2 int64, keepAlive bool, logger *logrus.Logger) (Queue, error) {
 
 	if !keepAlive {
 		logger.WithFields(logrus.Fields{}).Warn("Queue created with keepAlive=false")
 	}
 
+	if apiAttempts < 1 {
+		apiAttempts = 1
+	}
+
 	queue := &queue{
-		serverAddr: serverAddr,
-		clientId:   clientId,
-		searchKey1: searchKey1,
-		searchKey2: searchKey2,
-		keepAlive: keepAlive,
-		connRetries: connRetries,
-		state:      Closed,
-		log:        logger,
+		serverAddr:  serverAddr,
+		clientId:    clientId,
+		searchKey1:  searchKey1,
+		searchKey2:  searchKey2,
+		keepAlive:   keepAlive,
+		apiAttempts: apiAttempts,
+		state:       Closed,
+		log:         logger,
 	}
 
 	err := queue.createTransport()
@@ -85,8 +89,9 @@ type queue struct {
 	// Client app specifies its configured logger
 	log *logrus.Logger
 	// This is should be set to true unless in test mode
-	keepAlive bool
-	connRetries int
+	keepAlive   bool
+	// # times we attempt an api call (post or subscribe) before given up
+	apiAttempts int
 	// Connection/api management
 	mux   sync.Mutex
 	state State
@@ -95,23 +100,42 @@ type queue struct {
 }
 
 func (q *queue) PostEvent(ctx context.Context, json string) error {
-	_, err := q.qapi.PostEvent(ctx, &qapi.EventMsg{
-		ClientId:        q.clientId,
-		EventJson:       json,
-		UserToken:       uuid.New().String(),
-		FutureUserToken: "",
-		EffectiveDate:   toTimestamp(time.Now().UTC()),
-		SearchKey1:      q.searchKey1,
-		SearchKey2:      q.searchKey2,
-	})
-	if err != nil {
-		q.log.WithFields(logrus.Fields{"err": err}).Error("Queue::PostEvent: failed to post event")
-		return err
+
+	var delaySec = time.Second
+	maxAttempts := q.apiAttempts
+	curAttempts := 0
+
+	for curAttempts < maxAttempts {
+		_, err := q.qapi.PostEvent(ctx, &qapi.EventMsg{
+			ClientId:        q.clientId,
+			EventJson:       json,
+			UserToken:       uuid.New().String(),
+			FutureUserToken: "",
+			EffectiveDate:   toTimestamp(time.Now().UTC()),
+			SearchKey1:      q.searchKey1,
+			SearchKey2:      q.searchKey2,
+		})
+
+		curAttempts++
+		if err != nil {
+			if curAttempts >= maxAttempts {
+				q.log.WithFields(logrus.Fields{"err": err}).Error("Queue::PostEvent: failed to post event")
+				return err
+			}
+
+			q.log.WithFields(logrus.Fields{"err": err}).Errorf("Queue::PostEvent: failed to post event, attempts=[%d/%d] sleeping %d sec and retry",
+				curAttempts, maxAttempts, delaySec)
+
+			time.Sleep(delaySec)
+			delaySec = delaySec * 2
+		}
+		break
 	}
 	return nil
 }
 
-func (q *queue) SubscribeEvents(_ context.Context, evtCh chan<- *qapi.EventMsg) error {
+
+func (q *queue) SubscribeEvents(_ context.Context, handlerFn func(ev *qapi.EventMsg), closeFn func()) error {
 
 	q.mux.Lock()
 	defer q.mux.Unlock()
@@ -122,14 +146,14 @@ func (q *queue) SubscribeEvents(_ context.Context, evtCh chan<- *qapi.EventMsg) 
 		return nil
 	}
 
-	stream, err := q.subscribeWithAttempts(q.connRetries)
+	stream, err := q.subscribeWithAttempts(q.apiAttempts)
 	if err != nil {
 		// We don't try to automatically re-subscribe, we let the client decide and handle retries if necessary
 		return err
 	}
 	// Start gor to listen to events (and reconnect if/when necessary)
 	go func() {
-		q.listen(stream, evtCh)
+		q.listen(stream, handlerFn, closeFn)
 	}()
 
 	return nil
@@ -140,7 +164,7 @@ func (q *queue) subscribeWithAttempts(maxAttempts int) (qapi.QueueApi_SubscribeE
 
 	q.log.WithFields(logrus.Fields{"state": q.state}).Info("Queue::subscribeWithAttempts: enter")
 
-	var delaySec time.Duration = time.Second
+	var delaySec = time.Second
 	var stream qapi.QueueApi_SubscribeEventsClient
 	var err error
 
@@ -171,7 +195,7 @@ func (q *queue) subscribeWithAttempts(maxAttempts int) (qapi.QueueApi_SubscribeE
 	return stream, nil
 }
 
-func (q *queue) listen(originalStream qapi.QueueApi_SubscribeEventsClient, evtCh chan<- *qapi.EventMsg) {
+func (q *queue) listen(originalStream qapi.QueueApi_SubscribeEventsClient, handlerFn func(ev *qapi.EventMsg), closeFn func()) {
 
 	// over a day of trying...
 	const maxAttempts = 16
@@ -182,7 +206,7 @@ func (q *queue) listen(originalStream qapi.QueueApi_SubscribeEventsClient, evtCh
 		// Receive and forwards events without lock until something happens...
 		evt, err := stream.Recv()
 		if err == nil && evt != nil {
-			evtCh <- evt
+			handlerFn(evt)
 			continue
 		}
 
@@ -193,8 +217,7 @@ func (q *queue) listen(originalStream qapi.QueueApi_SubscribeEventsClient, evtCh
 		// Normal termination after Closed was called
 		if err == io.EOF && q.state == Closed {
 			defer func() {
-				// Close client event channel
-				close(evtCh)
+				closeFn()
 				q.mux.Unlock()
 			}()
 			q.log.WithFields(logrus.Fields{"state": q.state}).Info("Queue::listen (gor): EOF stream upon Close, exit...")
