@@ -54,9 +54,11 @@ func doTest(warmup string, targetRate float64, sendEvts int, rcvEvts int, displa
 	evtChan := make(chan *qapi.EventMsg, 1000)
 
 	// Handler simply sends event into channel
-	handlerFn := func(evt *qapi.EventMsg) {
+	handlerFn := func(evt *qapi.EventMsg) error {
 		evtChan <- evt
+		return nil
 	}
+
 	// Close method closes the channel to complete to gor receiving the events
 	closeFn :=  func() {
 		close(evtChan)
@@ -82,6 +84,8 @@ func doTest(warmup string, targetRate float64, sendEvts int, rcvEvts int, displa
 			curRvc := 0
 			for evt := range evtCh {
 				curRvc += 1
+
+				queue.AckEvent(bctx, evt.UserToken, true)
 
 				if curRvc%displayRate == 0 {
 					logger.Infof("[doTest] Rcv curRvc=%d\n", curRvc)

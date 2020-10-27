@@ -18,14 +18,20 @@
 package org.killbill.queue.standalone;
 
 
+import io.grpc.stub.ServerCallStreamObserver;
 import org.killbill.billing.queue.rpc.gen.EventMsg;
 
 public interface StandaloneQueue {
 
-    public void start() throws Exception;
+    void start() throws Exception;
 
-    public void stop() throws Exception;
+    void stop() throws Exception;
 
-    public void insertEntryIntoQueue(final EventMsg request) throws Exception;
+    void insertEntryIntoQueue(final EventMsg request) throws Exception;
 
+    void ackEvent(final String userToken, final boolean success);
+
+    void registerResponseObserver(final String clientId, ServerCallStreamObserver<EventMsg> responseObserver);
+
+    void unregisterResponseObserver(final String clientId);
 }

@@ -33,6 +33,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
 
+import static io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall;
+
 public class StandaloneQueueNotification extends StandaloneQueueBase implements StandaloneQueue {
 
     private static final Logger logger = LoggerFactory.getLogger(StandaloneQueueNotification.class);
@@ -98,10 +100,18 @@ public class StandaloneQueueNotification extends StandaloneQueueBase implements 
         notificationQueue.recordFutureNotification(effectiveDate, entry, userToken, request.getSearchKey1(), request.getSearchKey2());
     }
 
+    @Override
+    public void ackEvent(final String userToken, final boolean success) {
+        notificationQueueHandler.notifyEventCompletion(userToken, success);
+    }
+
+
+    @Override
     public void registerResponseObserver(final String clientId, ServerCallStreamObserver<EventMsg> responseObserver) {
         notificationQueueHandler.registerResponseObserver(clientId, responseObserver);
     }
 
+    @Override
     public void unregisterResponseObserver(final String clientId) {
         notificationQueueHandler.unregisterResponseObserver(clientId);
     }

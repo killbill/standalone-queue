@@ -48,7 +48,8 @@ var _ Queue = &queue{}
 
 type Queue interface {
 	PostEvent(ctx context.Context, json string) error
-	SubscribeEvents(ctx context.Context, handlerFn func(ev *qapi.EventMsg), closeFn func()) error
+	SubscribeEvents(ctx context.Context, handlerFn func(ev *qapi.EventMsg) error, closeFn func()) error
+	AckEvent(ctx context.Context, userToken string, success bool) error
 	Close(ctx context.Context)
 }
 
@@ -123,7 +124,7 @@ func (q *queue) PostEvent(ctx context.Context, json string) error {
 				return err
 			}
 
-			q.log.WithFields(logrus.Fields{"err": err}).Errorf("Queue::PostEvent: failed to post event, attempts=[%d/%d] sleeping %d sec and retry",
+			q.log.WithFields(logrus.Fields{"err": err}).Warnf("Queue::PostEvent: failed to post event, attempts=[%d/%d] sleeping %d sec and retry",
 				curAttempts, maxAttempts, delaySec)
 
 			time.Sleep(delaySec)
@@ -134,8 +135,37 @@ func (q *queue) PostEvent(ctx context.Context, json string) error {
 	return nil
 }
 
+func (q *queue) AckEvent(ctx context.Context, userToken string, success bool) error {
 
-func (q *queue) SubscribeEvents(_ context.Context, handlerFn func(ev *qapi.EventMsg), closeFn func()) error {
+	var delaySec = time.Second
+	maxAttempts := q.apiAttempts
+	curAttempts := 0
+
+	for curAttempts < maxAttempts {
+
+		_, err := q.qapi.Ack(ctx, &qapi.AckRequest{
+			UserToken: userToken,
+			Success:   success,
+		})
+		curAttempts++
+		if err != nil {
+			if curAttempts >= maxAttempts {
+				q.log.WithFields(logrus.Fields{"err": err}).Error("Queue::Ack: failed to ack event")
+				return err
+			}
+
+			q.log.WithFields(logrus.Fields{"err": err}).Warnf("Queue::Ack: failed to ack event, attempts=[%d/%d] sleeping %d sec and retry",
+				curAttempts, maxAttempts, delaySec)
+
+			time.Sleep(delaySec)
+			delaySec = delaySec * 2
+		}
+		break
+	}
+	return nil
+}
+
+func (q *queue) SubscribeEvents(_ context.Context, handlerFn func(ev *qapi.EventMsg) error, closeFn func()) error {
 
 	q.mux.Lock()
 	defer q.mux.Unlock()
@@ -195,7 +225,7 @@ func (q *queue) subscribeWithAttempts(maxAttempts int) (qapi.QueueApi_SubscribeE
 	return stream, nil
 }
 
-func (q *queue) listen(originalStream qapi.QueueApi_SubscribeEventsClient, handlerFn func(ev *qapi.EventMsg), closeFn func()) {
+func (q *queue) listen(originalStream qapi.QueueApi_SubscribeEventsClient, handlerFn func(ev *qapi.EventMsg) error, closeFn func()) {
 
 	// over a day of trying...
 	const maxAttempts = 16
