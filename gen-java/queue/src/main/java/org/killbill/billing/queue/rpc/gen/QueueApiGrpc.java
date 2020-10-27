@@ -89,6 +89,37 @@ public final class QueueApiGrpc {
     return getSubscribeEventsMethod;
   }
 
+  private static volatile io.grpc.MethodDescriptor<org.killbill.billing.queue.rpc.gen.AckRequest,
+      org.killbill.billing.queue.rpc.gen.AckResponse> getAckMethod;
+
+  @io.grpc.stub.annotations.RpcMethod(
+      fullMethodName = SERVICE_NAME + '/' + "Ack",
+      requestType = org.killbill.billing.queue.rpc.gen.AckRequest.class,
+      responseType = org.killbill.billing.queue.rpc.gen.AckResponse.class,
+      methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
+  public static io.grpc.MethodDescriptor<org.killbill.billing.queue.rpc.gen.AckRequest,
+      org.killbill.billing.queue.rpc.gen.AckResponse> getAckMethod() {
+    io.grpc.MethodDescriptor<org.killbill.billing.queue.rpc.gen.AckRequest, org.killbill.billing.queue.rpc.gen.AckResponse> getAckMethod;
+    if ((getAckMethod = QueueApiGrpc.getAckMethod) == null) {
+      synchronized (QueueApiGrpc.class) {
+        if ((getAckMethod = QueueApiGrpc.getAckMethod) == null) {
+          QueueApiGrpc.getAckMethod = getAckMethod =
+              io.grpc.MethodDescriptor.<org.killbill.billing.queue.rpc.gen.AckRequest, org.killbill.billing.queue.rpc.gen.AckResponse>newBuilder()
+              .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
+              .setFullMethodName(generateFullMethodName(SERVICE_NAME, "Ack"))
+              .setSampledToLocalTracing(true)
+              .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  org.killbill.billing.queue.rpc.gen.AckRequest.getDefaultInstance()))
+              .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  org.killbill.billing.queue.rpc.gen.AckResponse.getDefaultInstance()))
+              .setSchemaDescriptor(new QueueApiMethodDescriptorSupplier("Ack"))
+              .build();
+        }
+      }
+    }
+    return getAckMethod;
+  }
+
   private static volatile io.grpc.MethodDescriptor<org.killbill.billing.queue.rpc.gen.CloseRequest,
       org.killbill.billing.queue.rpc.gen.CloseResponse> getCloseMethod;
 
@@ -184,6 +215,13 @@ public final class QueueApiGrpc {
 
     /**
      */
+    public void ack(org.killbill.billing.queue.rpc.gen.AckRequest request,
+        io.grpc.stub.StreamObserver<org.killbill.billing.queue.rpc.gen.AckResponse> responseObserver) {
+      asyncUnimplementedUnaryCall(getAckMethod(), responseObserver);
+    }
+
+    /**
+     */
     public void close(org.killbill.billing.queue.rpc.gen.CloseRequest request,
         io.grpc.stub.StreamObserver<org.killbill.billing.queue.rpc.gen.CloseResponse> responseObserver) {
       asyncUnimplementedUnaryCall(getCloseMethod(), responseObserver);
@@ -205,6 +243,13 @@ public final class QueueApiGrpc {
                 org.killbill.billing.queue.rpc.gen.SubscriptionRequest,
                 org.killbill.billing.queue.rpc.gen.EventMsg>(
                   this, METHODID_SUBSCRIBE_EVENTS)))
+          .addMethod(
+            getAckMethod(),
+            asyncUnaryCall(
+              new MethodHandlers<
+                org.killbill.billing.queue.rpc.gen.AckRequest,
+                org.killbill.billing.queue.rpc.gen.AckResponse>(
+                  this, METHODID_ACK)))
           .addMethod(
             getCloseMethod(),
             asyncUnaryCall(
@@ -248,6 +293,14 @@ public final class QueueApiGrpc {
 
     /**
      */
+    public void ack(org.killbill.billing.queue.rpc.gen.AckRequest request,
+        io.grpc.stub.StreamObserver<org.killbill.billing.queue.rpc.gen.AckResponse> responseObserver) {
+      asyncUnaryCall(
+          getChannel().newCall(getAckMethod(), getCallOptions()), request, responseObserver);
+    }
+
+    /**
+     */
     public void close(org.killbill.billing.queue.rpc.gen.CloseRequest request,
         io.grpc.stub.StreamObserver<org.killbill.billing.queue.rpc.gen.CloseResponse> responseObserver) {
       asyncUnaryCall(
@@ -286,6 +339,13 @@ public final class QueueApiGrpc {
 
     /**
      */
+    public org.killbill.billing.queue.rpc.gen.AckResponse ack(org.killbill.billing.queue.rpc.gen.AckRequest request) {
+      return blockingUnaryCall(
+          getChannel(), getAckMethod(), getCallOptions(), request);
+    }
+
+    /**
+     */
     public org.killbill.billing.queue.rpc.gen.CloseResponse close(org.killbill.billing.queue.rpc.gen.CloseRequest request) {
       return blockingUnaryCall(
           getChannel(), getCloseMethod(), getCallOptions(), request);
@@ -316,6 +376,14 @@ public final class QueueApiGrpc {
 
     /**
      */
+    public com.google.common.util.concurrent.ListenableFuture<org.killbill.billing.queue.rpc.gen.AckResponse> ack(
+        org.killbill.billing.queue.rpc.gen.AckRequest request) {
+      return futureUnaryCall(
+          getChannel().newCall(getAckMethod(), getCallOptions()), request);
+    }
+
+    /**
+     */
     public com.google.common.util.concurrent.ListenableFuture<org.killbill.billing.queue.rpc.gen.CloseResponse> close(
         org.killbill.billing.queue.rpc.gen.CloseRequest request) {
       return futureUnaryCall(
@@ -325,7 +393,8 @@ public final class QueueApiGrpc {
 
   private static final int METHODID_POST_EVENT = 0;
   private static final int METHODID_SUBSCRIBE_EVENTS = 1;
-  private static final int METHODID_CLOSE = 2;
+  private static final int METHODID_ACK = 2;
+  private static final int METHODID_CLOSE = 3;
 
   private static final class MethodHandlers<Req, Resp> implements
       io.grpc.stub.ServerCalls.UnaryMethod<Req, Resp>,
@@ -351,6 +420,10 @@ public final class QueueApiGrpc {
         case METHODID_SUBSCRIBE_EVENTS:
           serviceImpl.subscribeEvents((org.killbill.billing.queue.rpc.gen.SubscriptionRequest) request,
               (io.grpc.stub.StreamObserver<org.killbill.billing.queue.rpc.gen.EventMsg>) responseObserver);
+          break;
+        case METHODID_ACK:
+          serviceImpl.ack((org.killbill.billing.queue.rpc.gen.AckRequest) request,
+              (io.grpc.stub.StreamObserver<org.killbill.billing.queue.rpc.gen.AckResponse>) responseObserver);
           break;
         case METHODID_CLOSE:
           serviceImpl.close((org.killbill.billing.queue.rpc.gen.CloseRequest) request,
@@ -419,6 +492,7 @@ public final class QueueApiGrpc {
               .setSchemaDescriptor(new QueueApiFileDescriptorSupplier())
               .addMethod(getPostEventMethod())
               .addMethod(getSubscribeEventsMethod())
+              .addMethod(getAckMethod())
               .addMethod(getCloseMethod())
               .build();
         }

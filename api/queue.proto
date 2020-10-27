@@ -13,23 +13,32 @@ import "google/protobuf/timestamp.proto";
 service QueueApi {
   rpc PostEvent (EventMsg) returns (PostEventResponse);
   rpc SubscribeEvents (SubscriptionRequest) returns (stream EventMsg);
+  rpc Ack(AckRequest) returns (AckResponse);
   rpc Close (CloseRequest) returns (CloseResponse);
 }
 
 
 message EventMsg {
 	string client_id = 1;
-    string event_json = 3;
-    string user_token = 4;
-    string future_user_token = 5;
+  string event_json = 3;
+  string user_token = 4;
+  string future_user_token = 5;
 	google.protobuf.Timestamp effective_date = 6;
-    int64 search_key1 = 7;
-    int64 search_key2 = 8;
+  int64 search_key1 = 7;
+  int64 search_key2 = 8;
 }
 
 message PostEventResponse {
 }
 
+
+message AckRequest {
+  string user_token = 1;
+  bool success = 2;
+}
+
+message AckResponse {
+}
 
 message CloseRequest {
 	string client_id = 1;
