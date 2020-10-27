@@ -13,11 +13,18 @@
     <name>queue gRPC apis</name>
     <description>queue gRPC apis</description>
     <url>http://github.com/killbill/standalone-queue</url>
+    <distributionManagement>
+       <repository>
+         <id>github</id>
+         <name>GitHub killbill Apache Maven Packages</name>
+         <url>https://maven.pkg.github.com/killbill/standalone-queue</url>
+       </repository>
+    </distributionManagement>
     <scm>
         <connection>scm:git:git://github.com/killbill/standalone-queue.git</connection>
         <developerConnection>scm:git:git@github.com:killbill/standalone-queue.git</developerConnection>
         <tag>HEAD</tag>
-        <url>http://github.com/killbill/standalone-queue/tree/master</url>
+        <url>http://github.com/killbill/standalone-queue</url>
     </scm>
     <issueManagement>
         <system>Github</system>
