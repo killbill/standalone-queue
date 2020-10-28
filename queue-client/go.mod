@@ -1,4 +1,4 @@
-module github.com/killbill/standalone-queue/client
+module github.com/killbill/standalone-queue/queue-client
 
 go 1.14
 
