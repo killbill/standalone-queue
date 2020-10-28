@@ -28,7 +28,7 @@ import (
 	qapi "github.com/killbill/standalone-queue/gen-go/api"
 	"github.com/sirupsen/logrus"
 
-	"github.com/killbill/standalone-queue/src/queue"
+	"github.com/killbill/standalone-queue/client/src/queue"
 )
 
 // Our app will want to pass its own (configured) logger
