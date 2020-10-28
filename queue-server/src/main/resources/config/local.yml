@@ -1,6 +1,6 @@
 ---
 app:
-  port: 9999
+  port: 10001
   nbThreads: 30
   recycleTcpConn: false
 logging:

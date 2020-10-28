@@ -149,7 +149,7 @@ func main() {
 	sleepLoops := flag.String("sleepLoop", "1m", "How many test iteration loops")
 	displayRate := flag.Int("displayRate", 100, "Print a trace for displayRate msg send or received")
 	// Queue params
-	serverAddr := flag.String("serverAddr", "127.0.0.1:9999", "Address of the server")
+	serverAddr := flag.String("serverAddr", "127.0.0.1:10001", "Address of the server")
 	connRetries := flag.Int("connRetries", 10, "How many times to retry to connect (with exp backoff wait)")
 	keepAlive := flag.Bool("keepAlive", true, "Set the ping keepAlive")
 
