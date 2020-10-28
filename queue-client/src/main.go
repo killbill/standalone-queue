@@ -49,8 +49,22 @@ func doTest(warmup string, targetRate float64, sendEvts int, rcvEvts int, displa
 	// Send all events synchronously using the provided targetRate
 	limiter := NewGradLimiter(warmup, targetRate, Linear)
 
+
+
 	evtChan := make(chan *qapi.EventMsg, 1000)
-	queue.SubscribeEvents(bctx, evtChan)
+
+	// Handler simply sends event into channel
+	handlerFn := func(evt *qapi.EventMsg) error {
+		evtChan <- evt
+		return nil
+	}
+
+	// Close method closes the channel to complete to gor receiving the events
+	closeFn :=  func() {
+		close(evtChan)
+	}
+
+	queue.SubscribeEvents(bctx, handlerFn, closeFn)
 
 	defer func() {
 		logger.Infof("[doTest] defer stopping limiter \n")
@@ -71,6 +85,8 @@ func doTest(warmup string, targetRate float64, sendEvts int, rcvEvts int, displa
 			for evt := range evtCh {
 				curRvc += 1
 
+				queue.AckEvent(bctx, evt.UserToken, true)
+
 				if curRvc%displayRate == 0 {
 					logger.Infof("[doTest] Rcv curRvc=%d\n", curRvc)
 					logger.Infof("[doTest] Got event... %s\n", evt.EventJson)
@@ -85,20 +101,25 @@ func doTest(warmup string, targetRate float64, sendEvts int, rcvEvts int, displa
 			doneCh <- struct{}{}
 		}(evtChan, doneCh)
 
+		failedSent := 0
 		curSent := 0
 		for sendEvts == -1 /* send events forever */ ||
 			curSent < sendEvts /* send events until we have reached sendEvts */ {
 			limiter.Wait(bctx)
 			uuid := uuid.New()
-			queue.PostEvent(bctx, "{\"foo\":\"something\",\"bar\":\""+uuid.String()+"\",\"date\":\"2020-10-13T02:30:45.966Z\",\"isActive\":true}")
-			curSent += 1
+			err := queue.PostEvent(bctx, "{\"foo\":\"something\",\"bar\":\""+uuid.String()+"\",\"date\":\"2020-10-13T02:30:45.966Z\",\"isActive\":true}")
+			if err != nil {
+				failedSent++
+			} else {
+				curSent++
+			}
 
 			if curSent%displayRate == 0 {
 				logger.Infof("[doTest] Sent curSent=%d\n", curSent)
 			}
 
-			if sendEvts >= 0 && curSent >= sendEvts {
-				logger.Infof("[doTest] Sent all events, curSent=%d\n", curSent)
+			if sendEvts >= 0 && (curSent + failedSent)  >= sendEvts {
+				logger.Infof("[doTest] Sent all events, curSent=%d, failedSent=%d\n", curSent, failedSent)
 				break
 			}
 		}
@@ -122,10 +143,10 @@ func main() {
 	// Test specific
 	rateEvents := flag.Float64("rateEvents", 100.0, "Nb events/sec")
 	warmupSeq := flag.String("warmup", "10s", "Time period for the warmup. e.g 30s")
-	sendEvts := flag.Int("sendEvts", 1000, "Nb events or -1 for infinite")
+	sendEvts := flag.Int("sendEvts", 10000, "Nb events or -1 for infinite")
 	rcvEvts := flag.Int("rcvEvts", -1, "Nb events or -1 for infinite")
 	testLoops := flag.Int("testLoops", 1, "How many test iteration loops")
-	sleepLoops := flag.String("sleepLoop", "1h", "How many test iteration loops")
+	sleepLoops := flag.String("sleepLoop", "1m", "How many test iteration loops")
 	displayRate := flag.Int("displayRate", 100, "Print a trace for displayRate msg send or received")
 	// Queue params
 	serverAddr := flag.String("serverAddr", "127.0.0.1:9999", "Address of the server")

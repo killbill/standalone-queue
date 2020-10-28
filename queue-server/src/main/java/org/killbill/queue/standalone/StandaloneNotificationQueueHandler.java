@@ -33,13 +33,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class StandaloneNotificationQueueHandler implements NotificationQueueHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(StandaloneNotificationQueueHandler.class);
-
+    private static final long WAIT_ACK_TO_SEC = 3;
 
     private static final List<Period> RETRY_SCHEDULE = Arrays.asList(
             Period.minutes(1),
@@ -50,13 +52,28 @@ public class StandaloneNotificationQueueHandler implements NotificationQueueHand
             Period.hours(24),
             Period.hours(48));
 
-    private final Map<String, ServerCallStreamObserver<EventMsg>> observers;
-
     private final Lock lock;
+    private final Map<String, ServerCallStreamObserver<EventMsg>> observers;
+    private final Map<String, CompletionSuccess> dispatchedEvents;
 
     public StandaloneNotificationQueueHandler() {
-        this.observers = new HashMap<>();
         this.lock = new ReentrantLock();
+        this.observers = new HashMap<>();
+        this.dispatchedEvents = new HashMap();
+    }
+
+    public void notifyEventCompletion(final String userToken, final boolean success) {
+        try {
+            lock.lock();
+            final CompletionSuccess complSuccess = dispatchedEvents.remove(userToken);
+            if (complSuccess == null) {
+                logger.warn("NotifyEventCompletion: Failed to find event thread waiting for userToken={}", userToken);
+                return;
+            }
+            complSuccess.notify(success);
+        } finally {
+            lock.unlock();
+        }
     }
 
 
@@ -134,25 +151,24 @@ public class StandaloneNotificationQueueHandler implements NotificationQueueHand
             logger.error("Unexpected type of event class={}, event={}",
                     (inputEvent != null ? inputEvent.getClass() : null), inputEvent);
             // TODO We could retry but if we cannot deserialize, this will not help...
-            return ;
+            return;
         }
 
         final StandaloneNotificationEvent inputEvent2 = (StandaloneNotificationEvent) inputEvent;
+        final String userTokenStr = userToken.toString();
         final EventMsg.Builder msgBuilder = EventMsg.newBuilder();
         msgBuilder.setClientId(inputEvent2.getClientId());
         msgBuilder.setEventJson(inputEvent2.getEnvelope());
-        msgBuilder.setUserToken(userToken.toString());
+        msgBuilder.setUserToken(userTokenStr);
         msgBuilder.setSearchKey1(searchKey1);
         msgBuilder.setSearchKey2(searchKey2);
         final EventMsg event = msgBuilder.build();
-
-        //withDelaySec(5);
 
         // Note that StreamObserver are not thread safe:
         //  "Since individual {@code StreamObserver}s are not thread-safe, if multiple threads will be
         //    writing to a {@code StreamObserver} concurrently, the application must synchronize calls."
         boolean foundValidObs = false;
-        boolean sentEvent = false;
+        CompletionSuccess complSuccess = null;
         try {
             lock.lock();
             for (final Map.Entry<String, io.grpc.stub.ServerCallStreamObserver<org.killbill.billing.queue.rpc.gen.EventMsg>> entry : observers.entrySet()) {
@@ -165,34 +181,66 @@ public class StandaloneNotificationQueueHandler implements NotificationQueueHand
                 }
                 foundValidObs = true;
                 try {
+                    complSuccess = new CompletionSuccess(userTokenStr);
+                    dispatchedEvents.put(userTokenStr, complSuccess);
                     obs.onNext(event);
-                    sentEvent = true;
                     // Break after first success
                     break;
                 } catch (final Exception e) {
+                    dispatchedEvents.remove(userTokenStr);
+                    complSuccess = null;
                     logger.error("Failed to write inputEventStr event={}, e={}", event, e);
                 }
             }
         } finally {
             lock.unlock();
-            if (!sentEvent) {
-                if (!foundValidObs) {
-                    logger.info("No registered valid observer, requeuing event={},", event);
-                } else {
-                    logger.info("failed to send event, requeuing event={},", event);
-                }
-                throw new QueueRetryException(RETRY_SCHEDULE);
+        }
+
+        // We did not send the event
+        if (complSuccess == null) {
+            if (!foundValidObs) {
+                logger.info("No registered valid observer, requeuing event={},", event);
+            } else {
+                logger.info("Failed to send event, requeuing event={},", event);
             }
+            throw new QueueRetryException(RETRY_SCHEDULE);
+        } else {
+            // This waits and potentially reschedules event by throwing QueueRetryException
+            complSuccess.waitForCompletion();
         }
     }
 
-    static void withDelaySec(long delay) {
-        try {
-            logger.info("Sleeping {} sec", delay);
-            Thread.sleep(1000 * delay);
-            logger.info("Done sleeping {} sec", delay);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+    private static class CompletionSuccess {
+
+        private final String userToken;
+        private final CountDownLatch latch;
+        private boolean status;
+
+        public CompletionSuccess(final String userToken) {
+            this.userToken = userToken;
+            this.latch = new CountDownLatch(1);
+        }
+
+        public void notify(boolean status) {
+            this.status = status;
+            latch.countDown();
+        }
+
+        public void waitForCompletion() throws QueueRetryException {
+            try {
+                final boolean res = latch.await(WAIT_ACK_TO_SEC, TimeUnit.SECONDS);
+                if (!res) {
+                    logger.warn("Thread waiting for event userToken={} timed out after {} seconds", userToken, WAIT_ACK_TO_SEC);
+                    throw new QueueRetryException(RETRY_SCHEDULE);
+                } else if (!status) {
+                    logger.info("Client Nack for userToken={}", userToken);
+                    throw new QueueRetryException(RETRY_SCHEDULE);
+                }
+            } catch (final InterruptedException e) {
+                Thread.currentThread().interrupt();
+                logger.warn("Thread waiting for event userToken={} got interrupted,", userToken);
+                throw new QueueRetryException(RETRY_SCHEDULE);
+            }
         }
     }
 }

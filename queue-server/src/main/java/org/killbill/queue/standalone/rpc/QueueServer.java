@@ -21,6 +21,7 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.ServerCallStreamObserver;
+import org.killbill.billing.queue.rpc.gen.AckResponse;
 import org.killbill.billing.queue.rpc.gen.CloseResponse;
 import org.killbill.billing.queue.rpc.gen.PostEventResponse;
 import org.killbill.billing.queue.rpc.gen.QueueApiGrpc;
@@ -36,6 +37,8 @@ import java.net.URISyntaxException;
 import java.util.TimeZone;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
+import static io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall;
 
 public class QueueServer {
 
@@ -159,6 +162,14 @@ public class QueueServer {
 
             queue.registerResponseObserver(request.getClientId(), obs);
         }
+
+        public void ack(org.killbill.billing.queue.rpc.gen.AckRequest request,
+                        io.grpc.stub.StreamObserver<org.killbill.billing.queue.rpc.gen.AckResponse> responseObserver) {
+            queue.ackEvent(request.getUserToken(), request.getSuccess());
+            responseObserver.onNext(AckResponse.newBuilder().build());
+            responseObserver.onCompleted();
+        }
+
 
         public void close(org.killbill.billing.queue.rpc.gen.CloseRequest request,
                           io.grpc.stub.StreamObserver<org.killbill.billing.queue.rpc.gen.CloseResponse> responseObserver) {
