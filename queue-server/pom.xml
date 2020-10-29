@@ -26,9 +26,24 @@
     <packaging>jar</packaging>
     <name>killbill-standalone-queue</name>
 
+    <url>http://github.com/killbill/standalone-queue</url>
     <scm>
-        <tag>killbill-standalone-queue-0.1.0</tag>
+        <connection>scm:git:git://github.com/killbill/standalone-queue.git</connection>
+        <developerConnection>scm:git:git@github.com:killbill/standalone-queue.git</developerConnection>
+        <tag>HEAD</tag>
+        <url>http://github.com/killbill/standalone-queue</url>
     </scm>
+    <issueManagement>
+        <system>Github</system>
+        <url>https://github.com/killbill/standalone-queue/issues</url>
+    </issueManagement>
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub killbill Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/killbill/standalone-queue</url>
+        </repository>
+    </distributionManagement>
 
     <properties>
         <check.fail-enforcer>false</check.fail-enforcer>
@@ -36,6 +51,7 @@
         <check.skip-enforcer>true</check.skip-enforcer>
         <check.skip-rat>true</check.skip-rat>
         <check.skip-spotbugs>true</check.skip-spotbugs>
+        <gen-queue.version>0.1.8</gen-queue.version>
         <grpc.version>1.32.2</grpc.version>
     </properties>
 
@@ -126,7 +142,7 @@
         <dependency>
             <groupId>org.kill-bill.billing.rpc</groupId>
             <artifactId>queue</artifactId>
-            <version>0.1.8-SNAPSHOT</version>
+            <version>${gen-queue.version}</version>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.commons</groupId>
