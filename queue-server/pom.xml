@@ -22,7 +22,7 @@
         <version>0.144.29</version>
     </parent>
     <artifactId>killbill-standalone-queue</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>killbill-standalone-queue</name>
 
@@ -30,7 +30,7 @@
     <scm>
         <connection>scm:git:git://github.com/killbill/standalone-queue.git</connection>
         <developerConnection>scm:git:git@github.com:killbill/standalone-queue.git</developerConnection>
-        <tag>killbill-standalone-queue-0.1.0</tag>
+        <tag>HEAD</tag>
         <url>http://github.com/killbill/standalone-queue</url>
     </scm>
     <issueManagement>
