@@ -37,7 +37,7 @@ public class ConfigModel {
     static final String PROP_DATASTORE_PASSWORD = "QUEUE_DATASTORE_PASSWORD";
 
     static final String PROP_APP_PORT = "QUEUE_APP_PORT";
-    static final String PROP_APP_ACK_TIME_SEC = "APP_ACK_TIME_SEC";
+    static final String PROP_APP_ACK_TIME_SEC = "QUEUE_ACK_TIME_SEC";
 
     private static final String NOTIFICATION_PREFIX = "org.killbill.notificationq.main.";
 
