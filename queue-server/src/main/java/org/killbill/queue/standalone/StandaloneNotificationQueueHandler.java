@@ -57,7 +57,7 @@ public class StandaloneNotificationQueueHandler implements NotificationQueueHand
     private final Map<String, CompletionSuccess> dispatchedEvents;
 
     public StandaloneNotificationQueueHandler(long ackTimeSec) {
-        logger.info("StandaloneNotificationQueueHandler configured with ackTime value = %d sec", ackTimeSec);
+        logger.info("StandaloneNotificationQueueHandler configured with ackTime value = {} sec", ackTimeSec);
         this.lock = new ReentrantLock();
         this.observers = new HashMap<>();
         this.dispatchedEvents = new HashMap();
