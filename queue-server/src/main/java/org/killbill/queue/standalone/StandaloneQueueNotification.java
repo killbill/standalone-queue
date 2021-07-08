@@ -56,10 +56,11 @@ public class StandaloneQueueNotification extends StandaloneQueueBase implements 
     public StandaloneQueueNotification(final String jdbcConnection,
                                        final String dbUsername,
                                        final String dbPassword,
+                                       final Long ackTimeSec,
                                        final NotificationQueueConfig config) throws NotificationQueueAlreadyExists {
         super(config, jdbcConnection, dbUsername, dbPassword);
 
-        this.notificationQueueHandler = new StandaloneNotificationQueueHandler();
+        this.notificationQueueHandler = new StandaloneNotificationQueueHandler(ackTimeSec);
         this.notificationQueueService = new DefaultNotificationQueueService(dbi, clock, (NotificationQueueConfig) queueConfig, metricRegistry);
         this.retryableQueueService = new RetryableNotificationQueueService(notificationQueueService);
 

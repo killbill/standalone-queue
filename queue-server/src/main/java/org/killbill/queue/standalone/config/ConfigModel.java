@@ -37,6 +37,7 @@ public class ConfigModel {
     static final String PROP_DATASTORE_PASSWORD = "QUEUE_DATASTORE_PASSWORD";
 
     static final String PROP_APP_PORT = "QUEUE_APP_PORT";
+    static final String PROP_APP_ACK_TIME_SEC = "APP_ACK_TIME_SEC";
 
     private static final String NOTIFICATION_PREFIX = "org.killbill.notificationq.main.";
 
@@ -80,6 +81,7 @@ public class ConfigModel {
         private Integer port;
         private Integer nbThreads;
         private Boolean recycleTcpConn;
+        private Long ackTimeSec;
 
         public App() {
         }
@@ -104,6 +106,19 @@ public class ConfigModel {
 
         public boolean getRecycleTcpConn() {
             return recycleTcpConn;
+        }
+
+        public long getAckTimeSec() {
+            return ackTimeSec;
+        }
+
+        public void setAckTimeSec(final Long ackTimeSec) {
+            final Long oAckTimeSec = fromSystemProperty(PROP_APP_ACK_TIME_SEC, Long.valueOf(0));
+            if (oAckTimeSec != null) {
+                this.ackTimeSec = oAckTimeSec;
+            } else {
+                this.ackTimeSec = ackTimeSec;
+            }
         }
     }
 
@@ -213,6 +228,8 @@ public class ConfigModel {
         }
         if (dummy instanceof Integer) {
             return (T) Integer.valueOf(value);
+        } else if (dummy instanceof Long) {
+            return (T) Long.valueOf(value);
         } else if (dummy instanceof String) {
             return (T) value;
         }

@@ -48,6 +48,7 @@ public class TestConfig {
 
         assertEquals(config.getApp().getNbThreads(), 30);
         assertEquals(config.getApp().getPort(), 9999);
+        assertEquals(config.getApp().getAckTimeSec(), 5);
 
         assertEquals(config.getDatastore().getPort(), Integer.valueOf(5432));
         assertEquals(config.getDatastore().getHost(), "localhost");
@@ -78,6 +79,8 @@ public class TestConfig {
         System.setProperty(ConfigModel.PROP_DATASTORE_USER, "user");
         System.setProperty(ConfigModel.PROP_DATASTORE_PASSWORD, "pwd!!!");
         System.setProperty(ConfigModel.PROP_DATASTORE_HOST, "host");
+        System.setProperty(ConfigModel.PROP_APP_ACK_TIME_SEC, "90");
+
 
 
         final Config conf = new Config(TEST_RESOURCE);
@@ -85,6 +88,7 @@ public class TestConfig {
 
         assertEquals(config.getApp().getNbThreads(), 30);
         assertEquals(config.getApp().getPort(), 8888);
+        assertEquals(config.getApp().getAckTimeSec(), 90);
 
         assertEquals(config.getDatastore().getPort(), Integer.valueOf(2345));
         assertEquals(config.getDatastore().getHost(), "host");

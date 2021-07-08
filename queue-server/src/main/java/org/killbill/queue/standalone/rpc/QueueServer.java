@@ -38,8 +38,6 @@ import java.util.TimeZone;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall;
-
 public class QueueServer {
 
     private static final Logger logger = LoggerFactory.getLogger(QueueServer.class);
@@ -85,6 +83,7 @@ public class QueueServer {
         this.queue = new StandaloneQueueNotification(config.getDatastore().getJdbcConn(),
                 config.getDatastore().getUser(),
                 config.getDatastore().getPassword(),
+                config.getApp().getAckTimeSec(),
                 config.getNotificationQueueConfig());
         queue.start();
 

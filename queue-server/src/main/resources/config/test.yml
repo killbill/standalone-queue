@@ -3,6 +3,7 @@ app:
   port: 9999
   nbThreads: 30
   recycleTcpConn: false
+  ackTimeSec: 5
 logging:
   level: debug
   format: text

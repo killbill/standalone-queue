@@ -41,7 +41,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class StandaloneNotificationQueueHandler implements NotificationQueueHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(StandaloneNotificationQueueHandler.class);
-    private static final long WAIT_ACK_TO_SEC = 3;
+    private final long ackTimeSec;
 
     private static final List<Period> RETRY_SCHEDULE = Arrays.asList(
             Period.minutes(1),
@@ -56,10 +56,12 @@ public class StandaloneNotificationQueueHandler implements NotificationQueueHand
     private final Map<String, ServerCallStreamObserver<EventMsg>> observers;
     private final Map<String, CompletionSuccess> dispatchedEvents;
 
-    public StandaloneNotificationQueueHandler() {
+    public StandaloneNotificationQueueHandler(long ackTimeSec) {
+        logger.info("StandaloneNotificationQueueHandler configured with ackTime value = %d sec", ackTimeSec);
         this.lock = new ReentrantLock();
         this.observers = new HashMap<>();
         this.dispatchedEvents = new HashMap();
+        this.ackTimeSec = ackTimeSec;
     }
 
     public void notifyEventCompletion(final String userToken, final boolean success) {
@@ -181,7 +183,7 @@ public class StandaloneNotificationQueueHandler implements NotificationQueueHand
                 }
                 foundValidObs = true;
                 try {
-                    complSuccess = new CompletionSuccess(userTokenStr);
+                    complSuccess = new CompletionSuccess(userTokenStr, ackTimeSec);
                     dispatchedEvents.put(userTokenStr, complSuccess);
                     obs.onNext(event);
                     // Break after first success
@@ -214,11 +216,13 @@ public class StandaloneNotificationQueueHandler implements NotificationQueueHand
 
         private final String userToken;
         private final CountDownLatch latch;
+        private final long ackTimeSec;
         private boolean status;
 
-        public CompletionSuccess(final String userToken) {
+        public CompletionSuccess(final String userToken, final long ackTimeSec) {
             this.userToken = userToken;
             this.latch = new CountDownLatch(1);
+            this.ackTimeSec = ackTimeSec;
         }
 
         public void notify(boolean status) {
@@ -228,9 +232,9 @@ public class StandaloneNotificationQueueHandler implements NotificationQueueHand
 
         public void waitForCompletion() throws QueueRetryException {
             try {
-                final boolean res = latch.await(WAIT_ACK_TO_SEC, TimeUnit.SECONDS);
+                final boolean res = latch.await(ackTimeSec, TimeUnit.SECONDS);
                 if (!res) {
-                    logger.warn("Thread waiting for event userToken={} timed out after {} seconds", userToken, WAIT_ACK_TO_SEC);
+                    logger.warn("Thread waiting for event userToken={} timed out after {} seconds", userToken, ackTimeSec);
                     throw new QueueRetryException(RETRY_SCHEDULE);
                 } else if (!status) {
                     logger.info("Client Nack for userToken={}", userToken);
