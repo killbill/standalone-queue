@@ -87,7 +87,9 @@ public class StandaloneQueueNotification extends StandaloneQueueBase implements 
         logger.info("Stopping test instance {}", QUEUE_NAME);
         if (notificationQueue != null) {
             retryableQueueService.stop();
-            notificationQueue.stopQueue();
+            if (!notificationQueue.stopQueue()) {
+                logger.warn("Timed out while shutting down {} queue: IN_PROCESSING entries might be left behind", notificationQueue.getFullQName());
+            }
             notificationQueueService.deleteNotificationQueue(SVC_NAME, QUEUE_NAME);
         }
         super.stop();
