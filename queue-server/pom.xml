@@ -28,8 +28,8 @@
 
     <url>http://github.com/killbill/standalone-queue</url>
     <scm>
-        <connection>scm:git:git://github.com/killbill/standalone-queue.git</connection>
-        <developerConnection>scm:git:git@github.com:killbill/standalone-queue.git</developerConnection>
+        <connection>scm:git:https://github.com/killbill/standalone-queue.git</connection>
+        <developerConnection>scm:git:https@github.com:killbill/standalone-queue.git</developerConnection>
         <tag>HEAD</tag>
         <url>http://github.com/killbill/standalone-queue</url>
     </scm>
