@@ -53,6 +53,7 @@
         <check.skip-spotbugs>true</check.skip-spotbugs>
         <gen-queue.version>0.1.8</gen-queue.version>
         <grpc.version>1.32.2</grpc.version>
+        <release.release-profiles/>
     </properties>
 
     <dependencies>
