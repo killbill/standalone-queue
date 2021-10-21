@@ -46,6 +46,7 @@
     </distributionManagement>
 
     <properties>
+        <project.scm.id>github</project.scm.id>
         <check.fail-enforcer>false</check.fail-enforcer>
         <check.skip-dependency>false</check.skip-dependency>
         <check.skip-enforcer>true</check.skip-enforcer>
