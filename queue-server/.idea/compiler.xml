@@ -2,10 +2,16 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <annotationProcessing>
-      <profile name="Maven default annotation processors profile" enabled="true">
+      <profile name="Annotation profile for killbill-standalone-queue" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/systems/manifold/manifold-preprocessor/2021.1.11/manifold-preprocessor-2021.1.11.jar" />
+          <entry name="$MAVEN_REPOSITORY$/systems/manifold/manifold/2021.1.11/manifold-2021.1.11.jar" />
+          <entry name="$MAVEN_REPOSITORY$/systems/manifold/manifold-rt/2021.1.11/manifold-rt-2021.1.11.jar" />
+          <entry name="$MAVEN_REPOSITORY$/systems/manifold/manifold-util/2021.1.11/manifold-util-2021.1.11.jar" />
+        </processorPath>
         <module name="killbill-standalone-queue" />
       </profile>
     </annotationProcessing>
@@ -15,7 +21,7 @@
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="killbill-standalone-queue" options="-parameters" />
+      <module name="killbill-standalone-queue" options="-parameters -XDignore.symbol.file" />
     </option>
   </component>
 </project>
