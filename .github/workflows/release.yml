@@ -1,0 +1,81 @@
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      perform_version:
+        description: 'tag to (re-)perform (in case of release:perform failure)'
+        required: false
+        default: ''
+
+env:
+  MAVEN_FLAGS: "-B --no-transfer-progress"
+  MAVEN_OPTS: "-Xmx2G -XX:+ExitOnOutOfMemoryError -Dmaven.wagon.rto=60000 -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        if: github.event.inputs.perform_version == ''
+        uses: actions/checkout@v2
+      - name: Checkout full repository
+        # Required when performing an existing release.
+        if: github.event.inputs.perform_version != ''
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: '0'
+      - name: Setup git user
+        env:
+          BUILD_USER: ${{ secrets.BUILD_USER }}
+          BUILD_TOKEN: ${{ secrets.BUILD_TOKEN }}
+        run: |
+          git config --global user.email "contact@killbill.io"
+          git config --global user.name "Kill Bill core team"
+          git config --global url."https://${BUILD_USER}:${BUILD_TOKEN}@github.com/".insteadOf "git@github.com:"
+      - name: Configure Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - name: Setup Maven repositories
+        uses: whelk-io/maven-settings-xml-action@v10
+        env:
+          BUILD_USER: ${{ secrets.BUILD_USER }}
+          BUILD_TOKEN: ${{ secrets.BUILD_TOKEN }}
+        with:
+          repositories: '[{ "id": "github-kb-standalone-queue", "url": "https://maven.pkg.github.com/killbill/standalone-queue", "releases": { "enabled": "true" }, "snapshots": { "enabled": "true" }}]'
+          servers: '[{ "id": "github-kb-standalone-queue", "username": "${{ secrets.PKG_USER }}", "password": "${{ secrets.PKG_SECRET }}"}]'
+      - name: Download Java dependencies
+        # We do as much as we can, but it may not be enough (https://issues.apache.org/jira/browse/MDEP-82)
+        run: |
+          cd queue-server
+          mvn ${MAVEN_FLAGS} clean install dependency:resolve dependency:resolve-plugins -DskipTests=true -Dgpg.skip=true
+          cd -
+      - name: Configure settings.xml for release
+        uses: actions/setup-java@v1
+        env:
+          BUILD_USER: ${{ secrets.BUILD_USER }}
+          BUILD_TOKEN: ${{ secrets.BUILD_TOKEN }}
+        with:
+          java-version: 11
+          server-id: github
+          server-username: ${BUILD_USER}
+          server-password: ${BUILD_TOKEN}
+      - name: Release artifacts
+        if: github.event.inputs.perform_version == ''
+        # It will still check the remote but hopefully not download much (0 B at 0 B/s). -o isn't safe because of MDEP-82 (see above).
+        run: |
+          cd queue-server
+          mvn ${MAVEN_FLAGS} release:clean release:prepare release:perform
+          cd -
+      - name: Perform release
+        if: github.event.inputs.perform_version != ''
+        # It will still check the remote but hopefully not download much (0 B at 0 B/s). -o isn't safe because of MDEP-82 (see above).
+        # See https://issues.apache.org/jira/browse/SCM-729 for why the release.properties file is required.
+        run: |
+          cd queue-server
+          echo "scm.url=scm\:git\:git@github.com\:${GITHUB_REPOSITORY}.git" > release.properties
+          echo "scm.tag=${{ github.event.inputs.perform_version }}" >> release.properties
+          mvn ${MAVEN_FLAGS} release:perform
+          cd -
+
