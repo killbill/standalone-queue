@@ -26,9 +26,6 @@ jobs:
         with:
           fetch-depth: '0'
       - name: Setup git user
-        env:
-          BUILD_USER: ${{ secrets.BUILD_USER }}
-          BUILD_TOKEN: ${{ secrets.BUILD_TOKEN }}
         run: |
           git config --global user.email "contact@killbill.io"
           git config --global user.name "Kill Bill core team"
@@ -54,6 +51,8 @@ jobs:
       - name: Release artifacts
         if: github.event.inputs.perform_version == ''
         # It will still check the remote but hopefully not download much (0 B at 0 B/s). -o isn't safe because of MDEP-82 (see above).
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd queue-server
           mvn ${MAVEN_FLAGS} release:clean release:prepare release:perform
@@ -62,6 +61,8 @@ jobs:
         if: github.event.inputs.perform_version != ''
         # It will still check the remote but hopefully not download much (0 B at 0 B/s). -o isn't safe because of MDEP-82 (see above).
         # See https://issues.apache.org/jira/browse/SCM-729 for why the release.properties file is required.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd queue-server
           echo "scm.url=scm\:git\:git@github.com\:${GITHUB_REPOSITORY}.git" > release.properties
