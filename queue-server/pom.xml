@@ -30,7 +30,7 @@
     <scm>
         <connection>scm:git:git://github.com/killbill/standalone-queue.git</connection>
         <developerConnection>scm:git:git@github.com:killbill/standalone-queue.git</developerConnection>
-        <tag>killbill-standalone-queue-0.1.6-SNAPSHOT</tag>
+        <tag>HEAD</tag>
         <url>http://github.com/killbill/standalone-queue</url>
     </scm>
     <issueManagement>
@@ -54,7 +54,7 @@
         <gen-queue.version>0.1.8</gen-queue.version>
         <grpc.version>1.32.2</grpc.version>
         <project.scm.id>github</project.scm.id>
-        <release.release-profiles />
+        <release.release-profiles/>
     </properties>
 
     <dependencies>
