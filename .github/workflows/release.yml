@@ -67,7 +67,7 @@ jobs:
         run: |
           git config --global url."ssh://git@github.com/".insteadOf https://github.com/
           cd queue-server
-          echo "scm.url=scm\:git\:git@github.com\:${GITHUB_REPOSITORY}.git" > release.properties
+          echo "scm.url=scm\:git\:git@github.com:killbill/standalone-queue.git" > release.properties
           echo "scm.tag=${{ github.event.inputs.perform_version }}" >> release.properties
           mvn ${MAVEN_FLAGS} release:perform
           cd -
