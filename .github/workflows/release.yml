@@ -51,10 +51,8 @@ jobs:
       - name: Release artifacts
         if: github.event.inputs.perform_version == ''
         # It will still check the remote but hopefully not download much (0 B at 0 B/s). -o isn't safe because of MDEP-82 (see above).
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git config --global url."ssh://git@github.com/".insteadOf https://github.com/
+          git config --global url."https://${{ secrets.PKG_USER }}:${{ secrets.PKG_SECRET }}@github.com/".insteadOf "git@github.com:"
           cd queue-server
           mvn ${MAVEN_FLAGS} release:clean release:prepare release:perform
           cd -
@@ -62,10 +60,8 @@ jobs:
         if: github.event.inputs.perform_version != ''
         # It will still check the remote but hopefully not download much (0 B at 0 B/s). -o isn't safe because of MDEP-82 (see above).
         # See https://issues.apache.org/jira/browse/SCM-729 for why the release.properties file is required.
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git config --global url."ssh://git@github.com/".insteadOf https://github.com/
+          git config --global url."https://${{ secrets.PKG_USER }}:${{ secrets.PKG_SECRET }}@github.com/".insteadOf "git@github.com:"
           cd queue-server
           echo "scm.url=scm\:git\:git@github.com:killbill/standalone-queue.git" > release.properties
           echo "scm.tag=${{ github.event.inputs.perform_version }}" >> release.properties
