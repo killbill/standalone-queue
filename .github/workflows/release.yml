@@ -40,8 +40,8 @@ jobs:
           BUILD_USER: ${{ secrets.BUILD_USER }}
           BUILD_TOKEN: ${{ secrets.BUILD_TOKEN }}
         with:
-          repositories: '[{ "id": "github-kb-standalone-queue", "url": "https://maven.pkg.github.com/killbill/standalone-queue", "releases": { "enabled": "true" }, "snapshots": { "enabled": "true" }}]'
-          servers: '[{ "id": "github-kb-standalone-queue", "username": "${{ secrets.PKG_USER }}", "password": "${{ secrets.PKG_SECRET }}"}]'
+          repositories: '[{ "id": "github", "url": "https://maven.pkg.github.com/killbill/standalone-queue", "releases": { "enabled": "true" }, "snapshots": { "enabled": "true" }}]'
+          servers: '[{ "id": "github", "username": "${{ secrets.PKG_USER }}", "password": "${{ secrets.PKG_SECRET }}"}]'
       - name: Download Java dependencies
         # We do as much as we can, but it may not be enough (https://issues.apache.org/jira/browse/MDEP-82)
         run: |
