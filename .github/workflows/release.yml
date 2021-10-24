@@ -27,12 +27,16 @@ jobs:
           fetch-depth: '0'
       - name: Setup git user
         env:
-          BUILD_USER: ${{ secrets.BUILD_USER }}
-          BUILD_TOKEN: ${{ secrets.BUILD_TOKEN }}
+          PKG_USER: ${{ secrets.PKG_USER }}
+          PKG_SECRET: ${{ secrets.PKG_SECRET }}
         run: |
           git config --global user.email "contact@killbill.io"
           git config --global user.name "Kill Bill core team"
-          git config --global url."https://${BUILD_USER}:${BUILD_TOKEN}@github.com/".insteadOf "git@github.com:"
+          # git config --global url."https://${{ secrets.PKG_USER }}:${{ secrets.PKG_SECRET }}@github.com/".insteadOf "git@github.com:"
+      - name: Display git config
+        run: |
+          echo "Git config"
+          git config --list
       - name: Configure Java
         uses: actions/setup-java@v1
         with:
@@ -51,18 +55,22 @@ jobs:
       - name: Release artifacts
         if: github.event.inputs.perform_version == ''
         # It will still check the remote but hopefully not download much (0 B at 0 B/s). -o isn't safe because of MDEP-82 (see above).
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd queue-server
-          mvn ${MAVEN_FLAGS} release:clean release:prepare release:perform
+          mvn ${MAVEN_FLAGS} -Darguments=-DskipTests release:clean release:prepare release:perform
           cd -
       - name: Perform release
         if: github.event.inputs.perform_version != ''
         # It will still check the remote but hopefully not download much (0 B at 0 B/s). -o isn't safe because of MDEP-82 (see above).
         # See https://issues.apache.org/jira/browse/SCM-729 for why the release.properties file is required.
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd queue-server
           echo "scm.url=scm\:git\:git@github.com:killbill/standalone-queue.git" > release.properties
           echo "scm.tag=${{ github.event.inputs.perform_version }}" >> release.properties
-          mvn ${MAVEN_FLAGS} release:perform
+          mvn ${MAVEN_FLAGS} -Darguments=-DskipTests release:perform
           cd -
 
