@@ -26,6 +26,9 @@ jobs:
         with:
           fetch-depth: '0'
       - name: Setup git user
+        env:
+          BUILD_USER: ${{ secrets.BUILD_USER }}
+          BUILD_TOKEN: ${{ secrets.BUILD_TOKEN }}
         run: |
           git config --global user.email "contact@killbill.io"
           git config --global user.name "Kill Bill core team"
@@ -36,9 +39,6 @@ jobs:
           java-version: 11
       - name: Setup Maven repositories
         uses: whelk-io/maven-settings-xml-action@v10
-        env:
-          BUILD_USER: ${{ secrets.BUILD_USER }}
-          BUILD_TOKEN: ${{ secrets.BUILD_TOKEN }}
         with:
           repositories: '[{ "id": "github", "url": "https://maven.pkg.github.com/killbill/standalone-queue", "releases": { "enabled": "true" }, "snapshots": { "enabled": "true" }}]'
           servers: '[{ "id": "github", "username": "${{ secrets.PKG_USER }}", "password": "${{ secrets.PKG_SECRET }}"}]'
@@ -52,7 +52,6 @@ jobs:
         if: github.event.inputs.perform_version == ''
         # It will still check the remote but hopefully not download much (0 B at 0 B/s). -o isn't safe because of MDEP-82 (see above).
         run: |
-          git config --global url."https://${{ secrets.PKG_USER }}:${{ secrets.PKG_SECRET }}@github.com/".insteadOf "git@github.com:"
           cd queue-server
           mvn ${MAVEN_FLAGS} release:clean release:prepare release:perform
           cd -
@@ -61,7 +60,6 @@ jobs:
         # It will still check the remote but hopefully not download much (0 B at 0 B/s). -o isn't safe because of MDEP-82 (see above).
         # See https://issues.apache.org/jira/browse/SCM-729 for why the release.properties file is required.
         run: |
-          git config --global url."https://${{ secrets.PKG_USER }}:${{ secrets.PKG_SECRET }}@github.com/".insteadOf "git@github.com:"
           cd queue-server
           echo "scm.url=scm\:git\:git@github.com:killbill/standalone-queue.git" > release.properties
           echo "scm.tag=${{ github.event.inputs.perform_version }}" >> release.properties
