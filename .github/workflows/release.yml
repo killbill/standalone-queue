@@ -44,8 +44,8 @@ jobs:
       - name: Setup Maven repositories
         uses: whelk-io/maven-settings-xml-action@v10
         with:
-          repositories: '[{ "id": "github", "url": "https://maven.pkg.github.com/killbill/standalone-queue", "releases": { "enabled": "true" }, "snapshots": { "enabled": "true" }}]'
-          servers: '[{ "id": "github", "username": "${{ secrets.PKG_USER }}", "password": "${{ secrets.PKG_SECRET }}"}]'
+          repositories: '[{ "id": "github2", "url": "https://maven.pkg.github.com/killbill/standalone-queue", "releases": { "enabled": "true" }, "snapshots": { "enabled": "true" }}]'
+          servers: '[{ "id": "github2", "username": "${{ secrets.PKG_USER }}", "password": "${{ secrets.PKG_SECRET }}"}]'
       - name: Download Java dependencies
         # We do as much as we can, but it may not be enough (https://issues.apache.org/jira/browse/MDEP-82)
         run: |
