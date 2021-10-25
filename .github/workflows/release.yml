@@ -32,7 +32,7 @@ jobs:
         run: |
           git config --global user.email "contact@killbill.io"
           git config --global user.name "Kill Bill core team"
-          git config --global url."https://${BUILD_USER}:${BUILD_TOKEN}@github.com/".insteadOf "git@github.com:"
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
       - name: Display git config
         run: |
           echo "Git config"
