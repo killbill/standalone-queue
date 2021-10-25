@@ -1,4 +1,4 @@
-name: release
+name: test
 
 on:
   workflow_dispatch:
@@ -38,5 +38,5 @@ jobs:
         run: |
           touch bar
           git add bar
-          git commmit -m "test bar"
-          git push origin "$(git_current_branch)"
+          git commit -m "test bar"
+          git push origin master
