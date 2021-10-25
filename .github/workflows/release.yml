@@ -26,13 +26,10 @@ jobs:
         with:
           fetch-depth: '0'
       - name: Setup git user
-        env:
-          PKG_USER: ${{ secrets.PKG_USER }}
-          PKG_SECRET: ${{ secrets.PKG_SECRET }}
         run: |
           git config --global user.email "contact@killbill.io"
           git config --global user.name "Kill Bill core team"
-          git config --global url."https://${{ secrets.PKG_USER }}:${{ secrets.PKG_SECRET }}@github.com/".insteadOf "git@github.com:"
+          git config --global url."https://github.com".insteadOf "git://github.com"
       - name: Display git config
         run: |
           echo "Git config"
