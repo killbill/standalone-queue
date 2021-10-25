@@ -30,7 +30,7 @@
     <scm>
         <connection>scm:git:git://github.com/killbill/standalone-queue.git</connection>
         <developerConnection>scm:git:git@github.com:killbill/standalone-queue.git</developerConnection>
-        <tag>killbill-standalone-queue-0.1.7</tag>
+        <tag>HEAD</tag>
         <url>http://github.com/killbill/standalone-queue</url>
     </scm>
     <issueManagement>
