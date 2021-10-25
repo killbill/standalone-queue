@@ -1,0 +1,42 @@
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      perform_version:
+        description: 'tag to (re-)perform (in case of release:perform failure)'
+        required: false
+        default: ''
+
+env:
+  MAVEN_FLAGS: "-B --no-transfer-progress"
+  MAVEN_OPTS: "-Xmx2G -XX:+ExitOnOutOfMemoryError -Dmaven.wagon.rto=60000 -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        if: github.event.inputs.perform_version == ''
+        uses: actions/checkout@v2
+      - name: Checkout full repository
+        # Required when performing an existing release.
+        if: github.event.inputs.perform_version != ''
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: '0'
+      - name: Setup git user
+        env:
+          PKG_USER: ${{ secrets.PKG_USER }}
+          PKG_SECRET: ${{ secrets.PKG_SECRET }}
+        run: |
+          git config --global user.email "contact@killbill.io"
+          git config --global user.name "Kill Bill core team"
+          # git config --global url."https://${{ secrets.PKG_USER }}:${{ secrets.PKG_SECRET }}@github.com/".insteadOf "git@github.com:"
+      - name: Test
+        # We do as much as we can, but it may not be enough (https://issues.apache.org/jira/browse/MDEP-82)
+        run: |
+          touch bar
+          git add bar
+          git commmit -m "test bar"
+          git push origin "$(git_current_branch)"
