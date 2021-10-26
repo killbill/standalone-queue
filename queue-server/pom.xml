@@ -53,7 +53,7 @@
         <gen-queue.version>0.1.8</gen-queue.version>
         <grpc.version>1.32.2</grpc.version>
         <!-- <project.scm.id>github2</project.scm.id> -->
-        <release.release-profiles />
+        <release.release-profiles/>
     </properties>
 
     <dependencies>

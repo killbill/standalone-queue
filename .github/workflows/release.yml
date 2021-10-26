@@ -57,7 +57,7 @@ jobs:
         # It will still check the remote but hopefully not download much (0 B at 0 B/s). -o isn't safe because of MDEP-82 (see above).
         run: |
           cd queue-server
-          GIT_TRACE=2 mvn -X  ${MAVEN_FLAGS} -Darguments=-DskipTests release:clean release:prepare release:perform
+          mvn ${MAVEN_FLAGS} -Darguments=-DskipTests release:clean release:prepare release:perform
           cd -
       - name: Perform release
         if: github.event.inputs.perform_version != ''
@@ -67,8 +67,6 @@ jobs:
           cd queue-server
           echo "scm.url=scm\:git\:git@github.com:killbill/standalone-queue.git" > release.properties
           echo "scm.tag=${{ github.event.inputs.perform_version }}" >> release.properties
-          echo "scm.id=github" >> release.properties
-          echo "project.scm.id=github" >> release.properties
           mvn ${MAVEN_FLAGS} -Darguments=-DskipTests release:perform
           cd -
 
