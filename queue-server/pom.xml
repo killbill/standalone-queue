@@ -37,7 +37,13 @@
         <system>Github</system>
         <url>https://github.com/killbill/standalone-queue/issues</url>
     </issueManagement>
-
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub killbill Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/killbill/standalone-queue</url>
+        </repository>
+    </distributionManagement>
     <properties>
         <check.fail-enforcer>false</check.fail-enforcer>
         <check.skip-dependency>false</check.skip-dependency>
@@ -47,7 +53,7 @@
         <gen-queue.version>0.1.8</gen-queue.version>
         <grpc.version>1.32.2</grpc.version>
         <!-- <project.scm.id>github2</project.scm.id> -->
-        <release.release-profiles />
+        <release.release-profiles/>
     </properties>
 
     <dependencies>
