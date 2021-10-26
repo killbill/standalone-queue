@@ -67,6 +67,8 @@ jobs:
           cd queue-server
           echo "scm.url=scm\:git\:git@github.com:killbill/standalone-queue.git" > release.properties
           echo "scm.tag=${{ github.event.inputs.perform_version }}" >> release.properties
+          echo "scm.id=github" >> release.properties
+          echo "project.scm.id=github" >> release.properties
           mvn ${MAVEN_FLAGS} -Darguments=-DskipTests release:perform
           cd -
 
