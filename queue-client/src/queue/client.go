@@ -115,7 +115,7 @@ func (q *queue) PostEvent(ctx context.Context, json string) error {
 	maxAttempts := q.apiAttempts
 	curAttempts := 0
 
-	for curAttempts < maxAttempts {
+	for {
 		_, err := q.qapi.PostEvent(ctx, &qapi.EventMsg{
 			ClientId:        q.clientID,
 			EventJson:       json,
@@ -125,23 +125,21 @@ func (q *queue) PostEvent(ctx context.Context, json string) error {
 			SearchKey1:      q.searchKey1,
 			SearchKey2:      q.searchKey2,
 		})
+		if err == nil {
+			return nil
+		}
 
 		curAttempts++
-		if err != nil {
-			if curAttempts >= maxAttempts {
-				q.log.WithFields(logrus.Fields{"err": err}).Error("Queue::PostEvent: failed to post event")
-				return err
-			}
-
-			q.log.WithFields(logrus.Fields{"err": err}).Warnf("Queue::PostEvent: failed to post event, attempts=[%d/%d] sleeping %d sec and retry",
-				curAttempts, maxAttempts, delaySec)
-
-			time.Sleep(delaySec)
-			delaySec = delaySec * 2
+		if curAttempts >= maxAttempts {
+			q.log.Errorf(ctx, err, "Queue::PostEvent: failed to post event")
+			return err
 		}
-		break
+
+		q.log.Warnf(ctx, err, "Queue::PostEvent: failed to post event, attempts=[%d/%d] sleeping %d sec and retry",
+			curAttempts, maxAttempts, delayDur.Seconds())
+		time.Sleep(delayDur)
+		delayDur = delayDur * 2
 	}
-	return nil
 }
 
 func (q *queue) AckEvent(ctx context.Context, userToken string, success bool) error {
@@ -150,28 +148,26 @@ func (q *queue) AckEvent(ctx context.Context, userToken string, success bool) er
 	maxAttempts := q.apiAttempts
 	curAttempts := 0
 
-	for curAttempts < maxAttempts {
-
+	for {
 		_, err := q.qapi.Ack(ctx, &qapi.AckRequest{
 			UserToken: userToken,
 			Success:   success,
 		})
-		curAttempts++
-		if err != nil {
-			if curAttempts >= maxAttempts {
-				q.log.WithFields(logrus.Fields{"err": err}).Error("Queue::Ack: failed to ack event")
-				return err
-			}
-
-			q.log.WithFields(logrus.Fields{"err": err}).Warnf("Queue::Ack: failed to ack event, attempts=[%d/%d] sleeping %d sec and retry",
-				curAttempts, maxAttempts, delaySec)
-
-			time.Sleep(delaySec)
-			delaySec = delaySec * 2
+		if err == nil {
+			return nil
 		}
-		break
+
+		curAttempts++
+		if curAttempts >= maxAttempts {
+			q.log.Errorf(ctx, err, "Queue::Ack: failed to ack event")
+			return err
+		}
+
+		q.log.Warnf(ctx, err, "Queue::Ack: failed to ack event, attempts=[%d/%d] sleeping %d sec and retry",
+			curAttempts, maxAttempts, delayDur.Seconds())
+		time.Sleep(delayDur)
+		delayDur = delayDur * 2
 	}
-	return nil
 }
 
 func (q *queue) SubscribeEvents(ctx context.Context, handlerFn func(ev *qapi.EventMsg) error, closeFn func()) error {
