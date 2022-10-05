@@ -62,7 +62,7 @@ type Logger interface {
 
 // NewQueue creates a new queue instance
 // Returns an error if it's not able to create a transport
-func NewQueue(serverAddr string, apiAttempts int, clientID string, searchKey1 int64, searchKey2 int64, keepAlive bool, logger Logger) (Queue, error) {
+func NewQueue(serverAddr string, apiAttempts int, clientID string, searchKey1 int64, searchKey2 int64, keepAlive bool, logger Logger, grpcOpts []grpc.DialOption) (Queue, error) {
 
 	if !keepAlive {
 		logger.Warnf(context.Background(), nil, "Queue created with keepAlive=false")
@@ -83,7 +83,7 @@ func NewQueue(serverAddr string, apiAttempts int, clientID string, searchKey1 in
 		log:         logger,
 	}
 
-	err := queue.createTransport()
+	err := queue.createTransport(grpcOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -321,14 +321,13 @@ func (q *queue) Close(ctx context.Context) {
 	}
 }
 
-func (q *queue) createTransport() error {
+func (q *queue) createTransport(opts []grpc.DialOption) error {
 
 	q.mux.Lock()
 	defer q.mux.Unlock()
 
 	q.log.Infof(context.Background(), "Queue::createTransport: start state=%i", q.state)
 
-	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithInsecure())
 	if q.keepAlive {
 		// See https://github.com/grpc/grpc-go/tree/master/examples/features/keepalive
