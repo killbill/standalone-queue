@@ -31,20 +31,21 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// State defines the state of the queue
 type State int
 
 const (
-	// Initial state prior we called SubscribeEvents or after we have called Close
+	// Closed is the unitial state prior we called SubscribeEvents or after we have called Close
 	Closed State = iota
-	// Successful connected state
+	// Connected means a successfully connected state
 	Connected
-	// Disconnected
-	// - Go routine receiving stream events got an error
+	// Disconnected means the Go routine receiving stream events got an error
 	Disconnected
 )
 
 var _ Queue = &queue{}
 
+// Queue defines a set of operations to interact with the queue
 type Queue interface {
 	PostEvent(ctx context.Context, json string) error
 	SubscribeEvents(ctx context.Context, handlerFn func(ev *qapi.EventMsg) error, closeFn func()) error
@@ -61,7 +62,7 @@ type Logger interface {
 
 // NewQueue creates a new queue instance
 // Returns an error if it's not able to create a transport
-func NewQueue(serverAddr string, apiAttempts int, clientId string, searchKey1 int64, searchKey2 int64, keepAlive bool, logger Logger) (Queue, error) {
+func NewQueue(serverAddr string, apiAttempts int, clientID string, searchKey1 int64, searchKey2 int64, keepAlive bool, logger Logger) (Queue, error) {
 
 	if !keepAlive {
 		logger.Warnf(context.Background(), nil, "Queue created with keepAlive=false")
@@ -73,7 +74,7 @@ func NewQueue(serverAddr string, apiAttempts int, clientId string, searchKey1 in
 
 	queue := &queue{
 		serverAddr:  serverAddr,
-		clientId:    clientId,
+		clientID:    clientID,
 		searchKey1:  searchKey1,
 		searchKey2:  searchKey2,
 		keepAlive:   keepAlive,
@@ -92,7 +93,7 @@ func NewQueue(serverAddr string, apiAttempts int, clientId string, searchKey1 in
 type queue struct {
 	// Queue settings
 	serverAddr string
-	clientId   string
+	clientID   string
 	searchKey1 int64
 	searchKey2 int64
 	// Client app specifies its configured logger
@@ -110,13 +111,13 @@ type queue struct {
 
 func (q *queue) PostEvent(ctx context.Context, json string) error {
 
-	var delaySec = time.Second
+	var delayDur = time.Second
 	maxAttempts := q.apiAttempts
 	curAttempts := 0
 
 	for curAttempts < maxAttempts {
 		_, err := q.qapi.PostEvent(ctx, &qapi.EventMsg{
-			ClientId:        q.clientId,
+			ClientId:        q.clientID,
 			EventJson:       json,
 			UserToken:       uuid.New().String(),
 			FutureUserToken: "",
@@ -145,7 +146,7 @@ func (q *queue) PostEvent(ctx context.Context, json string) error {
 
 func (q *queue) AckEvent(ctx context.Context, userToken string, success bool) error {
 
-	var delaySec = time.Second
+	var delayDur = time.Second
 	maxAttempts := q.apiAttempts
 	curAttempts := 0
 
@@ -210,7 +211,7 @@ func (q *queue) subscribeWithAttempts(ctx context.Context, maxAttempts int) (qap
 	for stream == nil {
 		// TODO do we need a context.Background() here?
 		stream, err = q.qapi.SubscribeEvents(ctx, &qapi.SubscriptionRequest{
-			ClientId:   q.clientId,
+			ClientId:   q.clientID,
 			SearchKey2: q.searchKey2,
 		})
 		if err == nil {
@@ -314,7 +315,7 @@ func (q *queue) Close(ctx context.Context) {
 	// Attempt the Close call regardless of state
 	q.log.Infof(ctx, "Queue::Close: closing server connection")
 	_, err := q.qapi.Close(ctx, &qapi.CloseRequest{
-		ClientId: q.clientId,
+		ClientId: q.clientID,
 	})
 	if err != nil {
 		// If we have an error and we were in Connected mode, log the error, otherwise ignore
