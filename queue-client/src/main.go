@@ -35,7 +35,23 @@ import (
 var logger = logrus.New()
 var customFormatter = new(logrus.TextFormatter)
 
-func doTest(warmup string, targetRate float64, sendEvts int, rcvEvts int, displayRate int, testLoops int , sleepLoops string, queue queue.Queue) {
+type queueLogger struct {
+	logger *logrus.Logger
+}
+
+func (l *queueLogger) Infof(_ context.Context, format string, args ...interface{}) {
+	l.logger.Infof(format, args...)
+}
+
+func (l *queueLogger) Warnf(_ context.Context, err error, format string, args ...interface{}) {
+	l.logger.WithError(err).Warnf(format, args...)
+}
+
+func (l *queueLogger) Errorf(_ context.Context, err error, format string, args ...interface{}) {
+	l.logger.WithError(err).Errorf(format, args...)
+}
+
+func doTest(warmup string, targetRate float64, sendEvts int, rcvEvts int, displayRate int, testLoops int, sleepLoops string, queue queue.Queue) {
 
 	if rcvEvts == -1 {
 		// Default expected recv events should match the one we send.
@@ -49,8 +65,6 @@ func doTest(warmup string, targetRate float64, sendEvts int, rcvEvts int, displa
 	// Send all events synchronously using the provided targetRate
 	limiter := NewGradLimiter(warmup, targetRate, Linear)
 
-
-
 	evtChan := make(chan *qapi.EventMsg, 1000)
 
 	// Handler simply sends event into channel
@@ -60,7 +74,7 @@ func doTest(warmup string, targetRate float64, sendEvts int, rcvEvts int, displa
 	}
 
 	// Close method closes the channel to complete to gor receiving the events
-	closeFn :=  func() {
+	closeFn := func() {
 		close(evtChan)
 	}
 
@@ -74,7 +88,6 @@ func doTest(warmup string, targetRate float64, sendEvts int, rcvEvts int, displa
 		logger.Infof("[doTest] defer done \n")
 	}()
 
-
 	sleep := parseDuration(sleepLoops)
 	curIteration := 0
 	for curIteration < testLoops {
@@ -83,7 +96,7 @@ func doTest(warmup string, targetRate float64, sendEvts int, rcvEvts int, displa
 		go func(evtCh <-chan *qapi.EventMsg, doneCh chan<- interface{}) {
 			curRvc := 0
 			for evt := range evtCh {
-				curRvc += 1
+				curRvc++
 
 				queue.AckEvent(bctx, evt.UserToken, true)
 
@@ -118,7 +131,7 @@ func doTest(warmup string, targetRate float64, sendEvts int, rcvEvts int, displa
 				logger.Infof("[doTest] Sent curSent=%d\n", curSent)
 			}
 
-			if sendEvts >= 0 && (curSent + failedSent)  >= sendEvts {
+			if sendEvts >= 0 && (curSent+failedSent) >= sendEvts {
 				logger.Infof("[doTest] Sent all events, curSent=%d, failedSent=%d\n", curSent, failedSent)
 				break
 			}
@@ -136,7 +149,6 @@ func doTest(warmup string, targetRate float64, sendEvts int, rcvEvts int, displa
 
 	logger.Infof("[doTest] Exiting...\n")
 }
-
 
 func main() {
 
@@ -156,7 +168,7 @@ func main() {
 	flag.Parse()
 	s := fmt.Sprintf("Starting test: server=%s, connRetries=%d, rateEvents=%f, warmup=%s, sendEvts=%d, rcvEvts=%d, testLoops=%d, sleepLoops=%s\n",
 		*serverAddr, *connRetries, *rateEvents, *warmupSeq, *sendEvts, *rcvEvts, *testLoops, *sleepLoops)
-	s += fmt.Sprintf("\n")
+	s += "\n"
 	logger.Infof(s)
 
 	// Log customization
@@ -167,7 +179,7 @@ func main() {
 	clientId := RandStringRunes(13)
 	searchKey1 := 1
 	searchKey2 := 2
-	api, err := queue.NewQueue(*serverAddr, *connRetries, clientId, int64(searchKey1), int64(searchKey2), *keepAlive, logger)
+	api, err := queue.NewQueue(*serverAddr, *connRetries, clientId, int64(searchKey1), int64(searchKey2), *keepAlive, &queueLogger{logger})
 	if err != nil {
 		logger.Errorf("[doTest] Failed to create connection, exiting err=%s...\n", err)
 		os.Exit(1)

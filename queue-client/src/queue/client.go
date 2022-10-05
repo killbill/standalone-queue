@@ -26,7 +26,6 @@ import (
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/google/uuid"
 	qapi "github.com/killbill/standalone-queue/gen-go/api"
-	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/status"
@@ -53,10 +52,19 @@ type Queue interface {
 	Close(ctx context.Context)
 }
 
-func NewQueue(serverAddr string, apiAttempts int, clientId string, searchKey1 int64, searchKey2 int64, keepAlive bool, logger *logrus.Logger) (Queue, error) {
+// Logger is a simple logger abstraction so that clients can provide their own logger
+type Logger interface {
+	Infof(context.Context, string, ...interface{})
+	Warnf(context.Context, error, string, ...interface{})
+	Errorf(context.Context, error, string, ...interface{})
+}
+
+// NewQueue creates a new queue instance
+// Returns an error if it's not able to create a transport
+func NewQueue(serverAddr string, apiAttempts int, clientId string, searchKey1 int64, searchKey2 int64, keepAlive bool, logger Logger) (Queue, error) {
 
 	if !keepAlive {
-		logger.WithFields(logrus.Fields{}).Warn("Queue created with keepAlive=false")
+		logger.Warnf(context.Background(), nil, "Queue created with keepAlive=false")
 	}
 
 	if apiAttempts < 1 {
@@ -88,9 +96,9 @@ type queue struct {
 	searchKey1 int64
 	searchKey2 int64
 	// Client app specifies its configured logger
-	log *logrus.Logger
+	log Logger
 	// This is should be set to true unless in test mode
-	keepAlive   bool
+	keepAlive bool
 	// # times we attempt an api call (post or subscribe) before given up
 	apiAttempts int
 	// Connection/api management
@@ -165,43 +173,43 @@ func (q *queue) AckEvent(ctx context.Context, userToken string, success bool) er
 	return nil
 }
 
-func (q *queue) SubscribeEvents(_ context.Context, handlerFn func(ev *qapi.EventMsg) error, closeFn func()) error {
+func (q *queue) SubscribeEvents(ctx context.Context, handlerFn func(ev *qapi.EventMsg) error, closeFn func()) error {
 
 	q.mux.Lock()
 	defer q.mux.Unlock()
 
 	// If we are Connected or in the process or connecting, return
 	if q.state != Closed {
-		q.log.WithFields(logrus.Fields{"state": q.state}).Info("Queue::SubscribeEvents: already connected, ignore")
+		q.log.Infof(ctx, "Queue::SubscribeEvents: already connected state=%i, ignore", q.state)
 		return nil
 	}
 
-	stream, err := q.subscribeWithAttempts(q.apiAttempts)
+	stream, err := q.subscribeWithAttempts(ctx, q.apiAttempts)
 	if err != nil {
 		// We don't try to automatically re-subscribe, we let the client decide and handle retries if necessary
 		return err
 	}
 	// Start gor to listen to events (and reconnect if/when necessary)
 	go func() {
-		q.listen(stream, handlerFn, closeFn)
+		q.listen(ctx, stream, handlerFn, closeFn)
 	}()
 
 	return nil
 }
 
 // This is called with Lock held
-func (q *queue) subscribeWithAttempts(maxAttempts int) (qapi.QueueApi_SubscribeEventsClient, error) {
+func (q *queue) subscribeWithAttempts(ctx context.Context, maxAttempts int) (qapi.QueueApi_SubscribeEventsClient, error) {
 
-	q.log.WithFields(logrus.Fields{"state": q.state}).Info("Queue::subscribeWithAttempts: enter")
+	q.log.Infof(ctx, "Queue::subscribeWithAttempts: enter")
 
-	var delaySec = time.Second
+	var delayDur = time.Second
 	var stream qapi.QueueApi_SubscribeEventsClient
 	var err error
 
 	curAttempts := 0
 	for stream == nil {
 		// TODO do we need a context.Background() here?
-		stream, err = q.qapi.SubscribeEvents(context.Background(), &qapi.SubscriptionRequest{
+		stream, err = q.qapi.SubscribeEvents(ctx, &qapi.SubscriptionRequest{
 			ClientId:   q.clientId,
 			SearchKey2: q.searchKey2,
 		})
@@ -213,24 +221,24 @@ func (q *queue) subscribeWithAttempts(maxAttempts int) (qapi.QueueApi_SubscribeE
 		curAttempts++
 		if curAttempts >= maxAttempts {
 			q.state = Closed
-			q.log.WithFields(logrus.Fields{"err": err, "state": q.state}).Errorf("Queue::subscribeWithAttempts: failed to subscribe to events attempts=[%d/%d]", curAttempts, maxAttempts)
+			q.log.Errorf(ctx, err, "Queue::subscribeWithAttempts: failed to subscribe to events attempts=[%d/%d] state=%i", curAttempts, maxAttempts, q.state)
 			return nil, err
 		}
 
-		q.log.WithFields(logrus.Fields{"err": err, "state": q.state}).Errorf("Queue::subscribeWithAttempts: failed to re-subscribe to events, attempts=[%d/%d] sleeping %d sec and retry",
-			curAttempts, maxAttempts, delaySec)
-		time.Sleep(delaySec)
-		delaySec = delaySec * 2
+		q.log.Errorf(ctx, err, "Queue::subscribeWithAttempts: failed to re-subscribe to events, attempts=[%d/%d] state=%d sleeping %d sec and retry",
+			curAttempts, maxAttempts, q.state, delayDur.Seconds())
+		time.Sleep(delayDur)
+		delayDur = delayDur * 2
 	}
 	return stream, nil
 }
 
-func (q *queue) listen(originalStream qapi.QueueApi_SubscribeEventsClient, handlerFn func(ev *qapi.EventMsg) error, closeFn func()) {
+func (q *queue) listen(ctx context.Context, originalStream qapi.QueueApi_SubscribeEventsClient, handlerFn func(ev *qapi.EventMsg) error, closeFn func()) {
 
 	// over a day of trying...
 	const maxAttempts = 16
 	stream := originalStream
-	q.log.WithFields(logrus.Fields{"state": q.state}).Info("Queue::listen (gor): starting")
+	q.log.Infof(ctx, "Queue::listen (gor) state=%i: starting ", q.state)
 
 	for {
 		// Receive and forwards events without lock until something happens...
@@ -250,7 +258,7 @@ func (q *queue) listen(originalStream qapi.QueueApi_SubscribeEventsClient, handl
 				closeFn()
 				q.mux.Unlock()
 			}()
-			q.log.WithFields(logrus.Fields{"state": q.state}).Info("Queue::listen (gor): EOF stream upon Close, exit...")
+			q.log.Infof(ctx, "Queue::listen (gor) state=%i: EOF stream upon Close, exit...", q.state)
 			return
 		}
 
@@ -259,21 +267,21 @@ func (q *queue) listen(originalStream qapi.QueueApi_SubscribeEventsClient, handl
 		stream = nil
 
 		if err == io.EOF {
-			q.log.WithFields(logrus.Fields{"state": q.state}).Info("Queue::listen (gor): unexpected EOF stream")
+			q.log.Errorf(ctx, err, "Queue::listen (gor) state=%i: unexpected EOF stream", q.state)
 		} else if err != nil {
 			serr, ok := status.FromError(err)
 			if !ok {
-				q.log.WithFields(logrus.Fields{"err": err, "state": q.state}).Error("Queue::listen (gor): failed to receive event stream")
+				q.log.Errorf(ctx, err, "Queue::listen (gor) state=%i: failed to receive event stream", q.state)
 			} else {
 				status := serr.Code().String()
-				q.log.WithFields(logrus.Fields{"err": err, "errStatus": status, "state": q.state}).Error("Queue::listen (gor): failed to receive event stream")
+				q.log.Errorf(ctx, err, "Queue::listen (gor) state=%i grpc_status=%s: failed to receive event stream", q.state, status)
 			}
 		}
 
 		if stream == nil {
-			stream, err = q.subscribeWithAttempts(maxAttempts)
+			stream, err = q.subscribeWithAttempts(ctx, maxAttempts)
 			if err != nil {
-				q.log.WithFields(logrus.Fields{"state": q.state}).Errorf("Queue::listen (gor): fatal failure to re-connect after %d attempts, exiting :-(")
+				q.log.Errorf(ctx, err, "Queue::listen (gor) state=%i: fatal failure to re-connect after %d attempts, exiting :-(", q.state)
 				q.mux.Unlock()
 				// TODO Should we call os.Exit(1), maybe configurable?
 				return
@@ -290,28 +298,28 @@ func (q *queue) Close(ctx context.Context) {
 		// Final state
 		q.state = Closed
 		// Close our side of the connection(s)
-		q.log.WithFields(logrus.Fields{"state": q.state}).Info("Queue::Close: closing client transport")
+		q.log.Infof(ctx, "Queue::Close: closing client transport state=%i", q.state)
 		err := q.conn.Close()
 		if err != nil {
-			q.log.WithFields(logrus.Fields{"err": err, "state": q.state}).Error("Queue::Close: failed to close client transport")
+			q.log.Errorf(ctx, err, "Queue::Close: failed to close client transport state=%i", q.state)
 		}
 		q.mux.Unlock()
 	}()
 
 	if q.state == Closed {
-		q.log.WithFields(logrus.Fields{"state": q.state}).Info("Queue::Close: not connected ignore")
+		q.log.Infof(ctx, "Queue::Close: not connected ignore state=%i", q.state)
 		return
 	}
 
 	// Attempt the Close call regardless of state
-	q.log.WithFields(logrus.Fields{"state": q.state}).Info("Queue::Close: closing server connection")
+	q.log.Infof(ctx, "Queue::Close: closing server connection")
 	_, err := q.qapi.Close(ctx, &qapi.CloseRequest{
 		ClientId: q.clientId,
 	})
 	if err != nil {
 		// If we have an error and we were in Connected mode, log the error, otherwise ignore
 		if q.state == Connected {
-			q.log.WithFields(logrus.Fields{"err": err, "state": q.state}).Error("Queue::Close: failed to close event stream")
+			q.log.Errorf(ctx, err, "Queue::Close: failed to close event stream state=%i", q.state)
 		}
 	}
 }
@@ -321,7 +329,7 @@ func (q *queue) createTransport() error {
 	q.mux.Lock()
 	defer q.mux.Unlock()
 
-	q.log.WithFields(logrus.Fields{"state": q.state}).Info("Queue::createTransport: start")
+	q.log.Infof(context.Background(), "Queue::createTransport: start state=%i", q.state)
 
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithInsecure())
@@ -337,7 +345,7 @@ func (q *queue) createTransport() error {
 	}
 	conn, err := grpc.Dial(q.serverAddr, opts...)
 	if err != nil {
-		q.log.WithFields(logrus.Fields{"err": err, "state": q.state}).Error("Queue::createTransport : Failed to create connection")
+		q.log.Errorf(context.Background(), err, "Queue::createTransport : Failed to create connection state=%i", q.state)
 		return err
 	}
 
