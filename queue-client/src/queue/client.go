@@ -183,6 +183,11 @@ func (q *queue) AckEvent(ctx context.Context, userToken string, success bool) er
 	}
 }
 
+// SubscribeEvents spins up a goroutine that handle incoming events.
+//
+// The context.Context provided here should be a long running one,
+// since once the context is cancelled, the stream will be closed, and
+// any subsequent connection attempt will fail.
 func (q *queue) SubscribeEvents(ctx context.Context, handlerFn func(ev *qapi.EventMsg) error, closeFn func()) error {
 
 	q.mux.Lock()
