@@ -43,6 +43,19 @@ const (
 	Disconnected
 )
 
+func (s State) String() string {
+	switch s {
+	case Closed:
+		return "Closed"
+	case Connected:
+		return "Connected"
+	case Disconnected:
+		return "Disconnected"
+	}
+
+	return ""
+}
+
 var _ Queue = &queue{}
 
 // Queue defines a set of operations to interact with the queue
@@ -135,7 +148,7 @@ func (q *queue) PostEvent(ctx context.Context, json string) error {
 			return err
 		}
 
-		q.log.Warnf(ctx, err, "Queue::PostEvent: failed to post event, attempts=[%d/%d] sleeping %d sec and retry",
+		q.log.Warnf(ctx, err, "Queue::PostEvent: failed to post event, attempts=[%d/%d] sleeping %v sec and retry",
 			curAttempts, maxAttempts, delayDur.Seconds())
 		time.Sleep(delayDur)
 		delayDur = delayDur * 2
@@ -163,13 +176,18 @@ func (q *queue) AckEvent(ctx context.Context, userToken string, success bool) er
 			return err
 		}
 
-		q.log.Warnf(ctx, err, "Queue::Ack: failed to ack event, attempts=[%d/%d] sleeping %d sec and retry",
+		q.log.Warnf(ctx, err, "Queue::Ack: failed to ack event, attempts=[%d/%d] sleeping %v sec and retry",
 			curAttempts, maxAttempts, delayDur.Seconds())
 		time.Sleep(delayDur)
 		delayDur = delayDur * 2
 	}
 }
 
+// SubscribeEvents spins up a goroutine that handle incoming events.
+//
+// The context.Context provided here should be a long running one,
+// since once the context is cancelled, the stream will be closed, and
+// any subsequent connection attempt will fail.
 func (q *queue) SubscribeEvents(ctx context.Context, handlerFn func(ev *qapi.EventMsg) error, closeFn func()) error {
 
 	q.mux.Lock()
@@ -177,7 +195,7 @@ func (q *queue) SubscribeEvents(ctx context.Context, handlerFn func(ev *qapi.Eve
 
 	// If we are Connected or in the process or connecting, return
 	if q.state != Closed {
-		q.log.Infof(ctx, "Queue::SubscribeEvents: already connected state=%i, ignore", q.state)
+		q.log.Infof(ctx, "Queue::SubscribeEvents: already connected state=%v, ignore", q.state)
 		return nil
 	}
 
@@ -205,7 +223,6 @@ func (q *queue) subscribeWithAttempts(ctx context.Context, maxAttempts int) (qap
 
 	curAttempts := 0
 	for stream == nil {
-		// TODO do we need a context.Background() here?
 		stream, err = q.qapi.SubscribeEvents(ctx, &qapi.SubscriptionRequest{
 			ClientId:   q.clientID,
 			SearchKey2: q.searchKey2,
@@ -218,11 +235,11 @@ func (q *queue) subscribeWithAttempts(ctx context.Context, maxAttempts int) (qap
 		curAttempts++
 		if curAttempts >= maxAttempts {
 			q.state = Closed
-			q.log.Errorf(ctx, err, "Queue::subscribeWithAttempts: failed to subscribe to events attempts=[%d/%d] state=%i", curAttempts, maxAttempts, q.state)
+			q.log.Errorf(ctx, err, "Queue::subscribeWithAttempts: failed to subscribe to events attempts=[%d/%d] state=%v", curAttempts, maxAttempts, q.state)
 			return nil, err
 		}
 
-		q.log.Errorf(ctx, err, "Queue::subscribeWithAttempts: failed to re-subscribe to events, attempts=[%d/%d] state=%d sleeping %d sec and retry",
+		q.log.Errorf(ctx, err, "Queue::subscribeWithAttempts: failed to re-subscribe to events, attempts=[%d/%d] state=%v sleeping %v sec and retry",
 			curAttempts, maxAttempts, q.state, delayDur.Seconds())
 		time.Sleep(delayDur)
 		delayDur = delayDur * 2
@@ -235,7 +252,7 @@ func (q *queue) listen(ctx context.Context, originalStream qapi.QueueApi_Subscri
 	// over a day of trying...
 	const maxAttempts = 16
 	stream := originalStream
-	q.log.Infof(ctx, "Queue::listen (gor) state=%i: starting ", q.state)
+	q.log.Infof(ctx, "Queue::listen (gor) state=%v: starting ", q.state)
 
 	for {
 		// Receive and forwards events without lock until something happens...
@@ -255,7 +272,7 @@ func (q *queue) listen(ctx context.Context, originalStream qapi.QueueApi_Subscri
 				closeFn()
 				q.mux.Unlock()
 			}()
-			q.log.Infof(ctx, "Queue::listen (gor) state=%i: EOF stream upon Close, exit...", q.state)
+			q.log.Infof(ctx, "Queue::listen (gor) state=%v: EOF stream upon Close, exit...", q.state)
 			return
 		}
 
@@ -264,21 +281,21 @@ func (q *queue) listen(ctx context.Context, originalStream qapi.QueueApi_Subscri
 		stream = nil
 
 		if err == io.EOF {
-			q.log.Errorf(ctx, err, "Queue::listen (gor) state=%i: unexpected EOF stream", q.state)
+			q.log.Errorf(ctx, err, "Queue::listen (gor) state=%v: unexpected EOF stream", q.state)
 		} else if err != nil {
 			serr, ok := status.FromError(err)
 			if !ok {
-				q.log.Errorf(ctx, err, "Queue::listen (gor) state=%i: failed to receive event stream", q.state)
+				q.log.Errorf(ctx, err, "Queue::listen (gor) state=%v: failed to receive event stream", q.state)
 			} else {
 				status := serr.Code().String()
-				q.log.Errorf(ctx, err, "Queue::listen (gor) state=%i grpc_status=%s: failed to receive event stream", q.state, status)
+				q.log.Errorf(ctx, err, "Queue::listen (gor) state=%v grpc_status=%s: failed to receive event stream", q.state, status)
 			}
 		}
 
 		if stream == nil {
 			stream, err = q.subscribeWithAttempts(ctx, maxAttempts)
 			if err != nil {
-				q.log.Errorf(ctx, err, "Queue::listen (gor) state=%i: fatal failure to re-connect after %d attempts, exiting :-(", q.state)
+				q.log.Errorf(ctx, err, "Queue::listen (gor) state=%v: fatal failure to re-connect after %d attempts, exiting :-(", q.state)
 				q.mux.Unlock()
 				// TODO Should we call os.Exit(1), maybe configurable?
 				return
@@ -295,16 +312,16 @@ func (q *queue) Close(ctx context.Context) {
 		// Final state
 		q.state = Closed
 		// Close our side of the connection(s)
-		q.log.Infof(ctx, "Queue::Close: closing client transport state=%i", q.state)
+		q.log.Infof(ctx, "Queue::Close: closing client transport state=%v", q.state)
 		err := q.conn.Close()
 		if err != nil {
-			q.log.Errorf(ctx, err, "Queue::Close: failed to close client transport state=%i", q.state)
+			q.log.Errorf(ctx, err, "Queue::Close: failed to close client transport state=%v", q.state)
 		}
 		q.mux.Unlock()
 	}()
 
 	if q.state == Closed {
-		q.log.Infof(ctx, "Queue::Close: not connected ignore state=%i", q.state)
+		q.log.Infof(ctx, "Queue::Close: not connected ignore state=%v", q.state)
 		return
 	}
 
@@ -316,7 +333,7 @@ func (q *queue) Close(ctx context.Context) {
 	if err != nil {
 		// If we have an error and we were in Connected mode, log the error, otherwise ignore
 		if q.state == Connected {
-			q.log.Errorf(ctx, err, "Queue::Close: failed to close event stream state=%i", q.state)
+			q.log.Errorf(ctx, err, "Queue::Close: failed to close event stream state=%v", q.state)
 		}
 	}
 }
@@ -326,7 +343,7 @@ func (q *queue) createTransport(opts []grpc.DialOption) error {
 	q.mux.Lock()
 	defer q.mux.Unlock()
 
-	q.log.Infof(context.Background(), "Queue::createTransport: start state=%i", q.state)
+	q.log.Infof(context.Background(), "Queue::createTransport: start state=%v", q.state)
 
 	opts = append(opts, grpc.WithInsecure())
 	if q.keepAlive {
@@ -341,7 +358,7 @@ func (q *queue) createTransport(opts []grpc.DialOption) error {
 	}
 	conn, err := grpc.Dial(q.serverAddr, opts...)
 	if err != nil {
-		q.log.Errorf(context.Background(), err, "Queue::createTransport : Failed to create connection state=%i", q.state)
+		q.log.Errorf(context.Background(), err, "Queue::createTransport : Failed to create connection state=%v", q.state)
 		return err
 	}
 
